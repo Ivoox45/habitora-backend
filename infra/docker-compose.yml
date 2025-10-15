@@ -1,0 +1,59 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: habitora_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootsecret
+      MYSQL_DATABASE: habitora
+      MYSQL_USER: habitora
+      MYSQL_PASSWORD: secret
+      TZ: America/Lima
+    ports:
+      - "3306:3306"
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_0900_ai_ci
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -prootsecret || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: habitora
+      PMA_PASSWORD: secret
+      UPLOAD_LIMIT: 64M
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: ..             # carpeta raíz del backend (donde está el Dockerfile y el pom.xml)
+      dockerfile: Dockerfile
+    container_name: habitora_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mysql://db:3306/habitora?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USER: habitora
+      DB_PASSWORD: secret
+      TZ: America/Lima
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
