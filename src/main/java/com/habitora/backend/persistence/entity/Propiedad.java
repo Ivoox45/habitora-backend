@@ -50,7 +50,6 @@ public class Propiedad {
   @Column(name = "piso_residencia_dueno")
   private Integer pisoResidenciaDueno;
 
-  // Relaciones inversas
   @Builder.Default
   @OneToMany(mappedBy = "propiedad", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Piso> pisos = new ArrayList<>();
@@ -67,7 +66,6 @@ public class Propiedad {
   @OneToMany(mappedBy = "propiedad", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ConfigRecordatorio> configRecordatorios = new ArrayList<>();
 
-  // Métodos utilitarios
   public void addPiso(Piso piso) {
     pisos.add(piso);
     piso.setPropiedad(this);
