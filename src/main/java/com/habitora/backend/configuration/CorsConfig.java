@@ -20,19 +20,19 @@ public class CorsConfig {
 
         if (environment.equalsIgnoreCase("prod")) {
 
-            originPatterns = new String[]{
-                    // Dominio del frontend (cuando exista)
+            originPatterns = new String[] {
+                    // Frontend (cuando lo tengas)
                     "https://habitora.app",
 
-                    // Dominio REAL del backend
+                    // Backend Railway (por si algún cliente web externo lo usa)
                     "https://habitora-backend-production.up.railway.app",
                     "http://habitora-backend-production.up.railway.app"
             };
 
         } else {
 
-            // Modo desarrollo (tú y tu amigo)
-            originPatterns = new String[]{
+            // Desarrollo local (tú y tu amigo)
+            originPatterns = new String[] {
                     "http://localhost:*",
                     "http://127.0.0.1:*"
             };

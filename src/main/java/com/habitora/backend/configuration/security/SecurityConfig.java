@@ -41,18 +41,36 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+                // Usa CorsConfig
                 .cors(Customizer.withDefaults())
+
+                // Sin CSRF porque usamos JWT + API stateless
                 .csrf(csrf -> csrf.disable())
+
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
+                        // Preflight CORS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Endpoints públicos
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+
+                        // Todo lo demás, autenticado
                         .anyRequest().authenticated()
                 )
+
                 .headers(headers -> headers
+                        // XSS (dejamos que el navegador maneje esto por defecto)
                         .xssProtection(xss -> xss.disable())
+
+                        // Necesario para Swagger / H2 si alguna vez lo usas
                         .frameOptions(frame -> frame.sameOrigin())
+
+                        // Anti-MIME sniffing (lo dejamos activo por seguridad)
                         .contentTypeOptions(contentType -> contentType.disable())
+
+                        // Content Security Policy básica; 'self' basta para Swagger
                         .contentSecurityPolicy(csp -> csp.policyDirectives(
                                 "default-src 'self'; " +
                                 "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
@@ -60,13 +78,17 @@ public class SecurityConfig {
                                 "img-src 'self' data: blob:; " +
                                 "connect-src 'self';"
                         ))
+
+                        // HSTS (solo sirve realmente cuando se accede por HTTPS)
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .maxAgeInSeconds(31536000)
                                 .includeSubDomains(true)
                         )
                 )
 
+                // Nuestro filtro para JWT en cookies
                 .addFilterBefore(jwtCookieAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
