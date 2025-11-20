@@ -16,28 +16,18 @@ public class CorsConfig {
     @Bean
     public WebMvcConfigurer corsConfigurer() {
 
-        String[] allowedOrigins;
+        final String[] originPatterns;
 
         if (environment.equalsIgnoreCase("prod")) {
-
-            allowedOrigins = new String[]{
+            originPatterns = new String[]{
                     "https://habitora.app",
-
-                    // Railway backend
-                    "https://habitora-backend-develpment.up.railway.app",
-                    "http://habitora-backend-develpment.up.railway.app"
+                    "https://habitora-backend-development.up.railway.app",
+                    "http://habitora-backend-development.up.railway.app"
             };
-
         } else {
-
-            // 🔥 Modo desarrollo (para ti y tu amigo)
-            allowedOrigins = new String[]{
-                    "http://localhost:5173",
+            originPatterns = new String[]{
                     "http://localhost:*",
-                    "http://127.0.0.1:5173",
-                    "http://127.0.0.1:*",
-                    "http://localhost:8080",
-                    "http://127.0.0.1:8080"
+                    "http://127.0.0.1:*"
             };
         }
 
@@ -45,7 +35,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins(allowedOrigins)
+                        .allowedOriginPatterns(originPatterns)
                         .allowedMethods("*")
                         .allowedHeaders("*")
                         .allowCredentials(true)

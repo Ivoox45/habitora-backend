@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.Customizer;
 
 @Configuration
 @EnableMethodSecurity
@@ -39,28 +41,18 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
-
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyRequest().authenticated()
                 )
-
-                // 🔥 HEADERS SEGUROS PARA PRODUCCIÓN
                 .headers(headers -> headers
-
-                        // Evitar XSS
                         .xssProtection(xss -> xss.disable())
-
-                        // Same-Origin para Swagger
                         .frameOptions(frame -> frame.sameOrigin())
-
-                        // Anti-MIME sniffing
                         .contentTypeOptions(contentType -> contentType.disable())
-
-                        // Content Security Policy
                         .contentSecurityPolicy(csp -> csp.policyDirectives(
                                 "default-src 'self'; " +
                                 "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
@@ -68,8 +60,6 @@ public class SecurityConfig {
                                 "img-src 'self' data: blob:; " +
                                 "connect-src 'self';"
                         ))
-
-                        // HSTS (solo en HTTPS)
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .maxAgeInSeconds(31536000)
                                 .includeSubDomains(true)
@@ -77,17 +67,14 @@ public class SecurityConfig {
                 )
 
                 .addFilterBefore(jwtCookieAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
-
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
             throws Exception {
         return configuration.getAuthenticationManager();
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
