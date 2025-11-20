@@ -21,23 +21,21 @@ public class CorsConfig {
         if (environment.equalsIgnoreCase("prod")) {
 
             allowedOrigins = new String[]{
-
-                    // Dominio final (cuando lo tengas)
                     "https://habitora.app",
 
-                    // ⚠️ TU BACKEND REAL DE RAILWAY (con el error de escritura)
+                    // Railway backend
                     "https://habitora-backend-develpment.up.railway.app",
-
-                    // Swagger UI de Railway (por si lo usa)
                     "http://habitora-backend-develpment.up.railway.app"
             };
 
         } else {
 
-            // --- MODO DESARROLLO ---
+            // 🔥 Modo desarrollo (para ti y tu amigo)
             allowedOrigins = new String[]{
                     "http://localhost:5173",
+                    "http://localhost:*",
                     "http://127.0.0.1:5173",
+                    "http://127.0.0.1:*",
                     "http://localhost:8080",
                     "http://127.0.0.1:8080"
             };
