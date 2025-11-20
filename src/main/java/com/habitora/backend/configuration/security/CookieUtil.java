@@ -22,12 +22,12 @@ public class CookieUtil {
         cookie.setPath("/");
 
         cookie.setHttpOnly(true);
-        cookie.setSecure(isProd()); // 🔥 Secure solo en prod (HTTPS)
+        cookie.setSecure(true); // 🔥 Secure solo en prod (HTTPS)
 
         cookie.setMaxAge(maxAgeSeconds);
 
         // PROTECCIÓN CONTRA CSRF Y ATAQUES
-        cookie.setAttribute("SameSite", isProd() ? "Strict" : "Lax");
+        cookie.setAttribute("SameSite", true ? "Strict" : "Lax");
 
         response.addCookie(cookie);
     }
@@ -36,9 +36,9 @@ public class CookieUtil {
         Cookie cookie = new Cookie(name, "");
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-        cookie.setSecure(isProd());
+        cookie.setSecure(true);
         cookie.setMaxAge(0);
-        cookie.setAttribute("SameSite", isProd() ? "Strict" : "Lax");
+        cookie.setAttribute("SameSite", true ? "Strict" : "Lax");
 
         response.addCookie(cookie);
     }
