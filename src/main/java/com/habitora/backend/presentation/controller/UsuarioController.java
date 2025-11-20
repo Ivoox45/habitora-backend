@@ -5,7 +5,6 @@ import com.habitora.backend.presentation.dto.usuario.request.UsuarioCreateReques
 import com.habitora.backend.presentation.dto.usuario.request.UsuarioUpdateRequestDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioResponseDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioTienePropiedadesResponseDto;
-import com.habitora.backend.presentation.dto.usuario.response.UsuarioEsNuevoResponseDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioListResponseDto;
 import com.habitora.backend.service.interfaces.IUsuarioService;
 import jakarta.validation.Valid;
