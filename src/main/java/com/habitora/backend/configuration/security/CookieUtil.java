@@ -22,12 +22,12 @@ public class CookieUtil {
         cookie.setPath("/");
 
         cookie.setHttpOnly(true);
-        cookie.setSecure(true); // 🔥 Secure solo en prod (HTTPS)
+
+        // 🔥 OBLIGATORIO PARA CROSS-DOMAIN
+        cookie.setSecure(true); // En prod = true
+        cookie.setAttribute("SameSite", true ? "None" : "Lax");
 
         cookie.setMaxAge(maxAgeSeconds);
-
-        // PROTECCIÓN CONTRA CSRF Y ATAQUES
-        cookie.setAttribute("SameSite", true ? "Strict" : "Lax");
 
         response.addCookie(cookie);
     }
@@ -36,15 +36,16 @@ public class CookieUtil {
         Cookie cookie = new Cookie(name, "");
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        cookie.setSecure(isProd());
+        cookie.setAttribute("SameSite", isProd() ? "None" : "Lax");
         cookie.setMaxAge(0);
-        cookie.setAttribute("SameSite", true ? "Strict" : "Lax");
 
         response.addCookie(cookie);
     }
 
     public String getCookieValue(HttpServletRequest request, String name) {
-        if (request.getCookies() == null) return null;
+        if (request.getCookies() == null)
+            return null;
         for (Cookie cookie : request.getCookies()) {
             if (cookie.getName().equals(name)) {
                 return cookie.getValue();
