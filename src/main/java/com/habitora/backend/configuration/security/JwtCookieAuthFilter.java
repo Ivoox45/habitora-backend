@@ -28,6 +28,12 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
     private final CookieUtil cookieUtil;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        // Ignore preflight OPTIONS requests
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
+    }
+
+    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
@@ -82,7 +88,7 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
                 new UsernamePasswordAuthenticationToken(
                         usuario,
                         null,
-                        Collections.emptyList() // en futuro: roles
+                        Collections.emptyList()
                 );
 
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
