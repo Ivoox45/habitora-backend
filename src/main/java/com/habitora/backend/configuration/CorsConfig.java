@@ -21,17 +21,19 @@ public class CorsConfig {
         if (environment.equalsIgnoreCase("prod")) {
 
             originPatterns = new String[] {
-                    // Frontend (cuando lo tengas)
+                    // Frontend producción (Vercel)
+                    "https://habitora-frontend.vercel.app",
+
+                    // Opcional — si algún día usas tu dominio propio
                     "https://habitora.app",
 
-                    // Backend Railway (por si algún cliente web externo lo usa)
+                    // Backend Railway (solo si algún cliente externo hace consultas)
                     "https://habitora-backend-production.up.railway.app",
                     "http://habitora-backend-production.up.railway.app"
             };
 
         } else {
-
-            // Desarrollo local (tú y tu amigo)
+            // Desarrollo local
             originPatterns = new String[] {
                     "http://localhost:*",
                     "http://127.0.0.1:*"

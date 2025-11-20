@@ -14,5 +14,7 @@ public interface HabitacionMapper {
     @Mapping(target = "pisoId", source = "piso.id")
     HabitacionResponseDto toResponse(Habitacion habitacion);
 
+    @Mapping(target = "pisoId", source = "piso.id")
+    @Mapping(target = "estado", source = "estado")
     HabitacionListResponseDto toListResponse(Habitacion habitacion);
 }
