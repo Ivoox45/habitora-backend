@@ -16,25 +16,43 @@ public class CorsConfig {
     @Bean
     public WebMvcConfigurer corsConfigurer() {
 
-        String[] allowedOrigins = environment.equals("prod")
-                ? new String[] {
+        String[] allowedOrigins;
+
+        if (environment.equalsIgnoreCase("prod")) {
+
+            allowedOrigins = new String[]{
+                    // Dominio final real
                     "https://habitora.app",
-                    "https://tu-dominio-real.com"
-                }
-                : new String[] {
-                    "http://localhost:5173",
+
+                    // Backend Railway (importante!)
+                    "https://habitora-backend-production.up.railway.app",
+                    "https://habitora-backend-development.up.railway.app",
+
+                    // Swagger UI si se carga desde Railway
+                    "http://habitora-backend-production.up.railway.app",
+                    "http://habitora-backend-development.up.railway.app"
+            };
+
+        } else {
+
+            // Modo desarrollo
+            allowedOrigins = new String[]{
+                    "http://localhost:5173",          // Vite
                     "http://127.0.0.1:5173",
-                    "http://localhost:8080"
-                };
+                    "http://localhost:8080",          // Swagger local
+                    "http://127.0.0.1:8080"
+            };
+        }
 
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOrigins(allowedOrigins)
-                        .allowedMethods("*")
+                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
-                        .allowCredentials(true);
+                        .allowCredentials(true)
+                        .maxAge(3600);
             }
         };
     }
