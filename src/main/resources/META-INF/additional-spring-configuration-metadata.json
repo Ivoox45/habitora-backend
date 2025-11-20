@@ -14,6 +14,11 @@
       "name": "jwt.refresh-token-expiration-ms",
       "type": "java.lang.Long",
       "description": "Expiration (ms) for refresh token"
+    },
+    {
+      "name": "app.env",
+      "type": "java.lang.String",
+      "description": "Application environment (local | prod)"
     }
   ]
 }

@@ -20,12 +20,14 @@ public class CookieUtil {
 
         Cookie cookie = new Cookie(name, value);
         cookie.setPath("/");
-
         cookie.setHttpOnly(true);
 
-        // 🔥 OBLIGATORIO PARA CROSS-DOMAIN
-        cookie.setSecure(true); // En prod = true
-        cookie.setAttribute("SameSite", true ? "None" : "Lax");
+        boolean prod = isProd();
+
+        // En producción: cookies cross-site → SameSite=None + Secure=true (HTTPS)
+        // En local: SameSite=Lax + Secure=false (para funcionar en http://localhost)
+        cookie.setSecure(prod);
+        cookie.setAttribute("SameSite", prod ? "None" : "Lax");
 
         cookie.setMaxAge(maxAgeSeconds);
 
@@ -36,16 +38,19 @@ public class CookieUtil {
         Cookie cookie = new Cookie(name, "");
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-        cookie.setSecure(isProd());
-        cookie.setAttribute("SameSite", isProd() ? "None" : "Lax");
-        cookie.setMaxAge(0);
 
+        boolean prod = isProd();
+        cookie.setSecure(prod);
+        cookie.setAttribute("SameSite", prod ? "None" : "Lax");
+
+        cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
 
     public String getCookieValue(HttpServletRequest request, String name) {
-        if (request.getCookies() == null)
+        if (request.getCookies() == null) {
             return null;
+        }
         for (Cookie cookie : request.getCookies()) {
             if (cookie.getName().equals(name)) {
                 return cookie.getValue();

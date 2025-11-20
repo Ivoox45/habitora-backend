@@ -24,10 +24,10 @@ public class CorsConfig {
                     // Frontend producción (Vercel)
                     "https://habitora-frontend.vercel.app",
 
-                    // Opcional — si algún día usas tu dominio propio
+                    // Opcional — dominio propio futuro
                     "https://habitora.app",
 
-                    // Backend Railway (solo si algún cliente externo hace consultas)
+                    // Backend Railway (por si algún cliente externo hace consultas)
                     "https://habitora-backend-production.up.railway.app",
                     "http://habitora-backend-production.up.railway.app"
             };
@@ -37,12 +37,10 @@ public class CorsConfig {
             originPatterns = new String[] {
                     "http://localhost:*",
                     "http://127.0.0.1:*",
+
+                    // Para probar también contra el frontend de Vercel si quieres
                     "https://habitora-frontend.vercel.app",
-
-                    // Opcional — si algún día usas tu dominio propio
                     "https://habitora.app",
-
-                    // Backend Railway (solo si algún cliente externo hace consultas)
                     "https://habitora-backend-production.up.railway.app",
                     "http://habitora-backend-production.up.railway.app"
             };
@@ -53,8 +51,9 @@ public class CorsConfig {
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOriginPatterns(originPatterns)
-                        .allowedMethods("*")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                         .allowedHeaders("*")
+                        .exposedHeaders("*")
                         .allowCredentials(true)
                         .maxAge(3600);
             }

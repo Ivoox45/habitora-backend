@@ -32,6 +32,9 @@ public class SecurityConfig {
             "/api/auth/register",
             "/api/auth/login",
             "/api/auth/logout",
+            // si tienes refresh:
+            "/api/auth/refresh",
+            // swagger
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v3/api-docs/**"
@@ -41,7 +44,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                // Usa CorsConfig
+                // Usa configuración de CORS de CorsConfig
                 .cors(Customizer.withDefaults())
 
                 // Sin CSRF porque usamos JWT + API stateless
@@ -61,29 +64,18 @@ public class SecurityConfig {
                 )
 
                 .headers(headers -> headers
-                        // XSS (dejamos que el navegador maneje esto por defecto)
-                        .xssProtection(xss -> xss.disable())
-
-                        // Necesario para Swagger / H2 si alguna vez lo usas
+                        // Deja las protecciones por defecto donde tiene sentido
+                        .xssProtection(Customizer.withDefaults())
                         .frameOptions(frame -> frame.sameOrigin())
-
-                        // Anti-MIME sniffing (lo dejamos activo por seguridad)
-                        .contentTypeOptions(contentType -> contentType.disable())
-
-                        // Content Security Policy básica; 'self' basta para Swagger
-                        .contentSecurityPolicy(csp -> csp.policyDirectives(
-                                "default-src 'self'; " +
-                                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-                                "style-src 'self' 'unsafe-inline'; " +
-                                "img-src 'self' data: blob:; " +
-                                "connect-src 'self';"
-                        ))
-
-                        // HSTS (solo sirve realmente cuando se accede por HTTPS)
+                        .contentTypeOptions(Customizer.withDefaults())
+                        // HSTS está bien porque en prod estarás en HTTPS (Railway)
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .maxAgeInSeconds(31536000)
                                 .includeSubDomains(true)
                         )
+                        // ⚠️ No configuramos Content-Security-Policy aquí,
+                        // porque tu backend es solo API REST (sin UI) y
+                        // podría romper llamadas desde el frontend.
                 )
 
                 // Nuestro filtro para JWT en cookies
