@@ -8,15 +8,16 @@ import com.habitora.backend.presentation.dto.usuario.request.UsuarioUpdateReques
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioResponseDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioListResponseDto;
 
+@SuppressWarnings("all")
 @org.mapstruct.Mapper(componentModel = "spring")
 public interface UsuarioMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "contraseña", source = "contraseña")
+    @Mapping(target = "contrasena", source = "contrasena")
     Usuario toEntity(UsuarioCreateRequestDto dto);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "contraseña", source = "contraseña")
+    @Mapping(target = "contrasena", source = "contrasena")
     Usuario toEntity(UsuarioUpdateRequestDto dto);
 
     UsuarioResponseDto toResponse(Usuario usuario);

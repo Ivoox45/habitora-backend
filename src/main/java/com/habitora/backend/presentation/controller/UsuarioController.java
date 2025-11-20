@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -30,20 +32,27 @@ public class UsuarioController {
 
     @Operation(summary = "Crear usuario", description = "Crea un nuevo usuario. El email debe ser único.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Usuario creado",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsuarioResponseDto.class))),
-        @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content),
-        @ApiResponse(responseCode = "409", description = "Email ya existe", content = @Content)
+            @ApiResponse(responseCode = "201", description = "Usuario creado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsuarioResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Email ya existe", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<UsuarioResponseDto> create(@Valid @RequestBody UsuarioCreateRequestDto request) {
+    public ResponseEntity<UsuarioResponseDto> create(
+            @Valid @RequestBody UsuarioCreateRequestDto request) {
+
         UsuarioResponseDto response = usuarioService.create(request);
-        return ResponseEntity.created(URI.create("/api/usuarios/" + response.getId())).body(response);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(response.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(response);
     }
 
     @Operation(summary = "Listar usuarios", description = "Obtiene todos los usuarios registrados")
-    @ApiResponse(responseCode = "200", description = "Lista de usuarios",
-        content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = UsuarioListResponseDto.class))))
+    @ApiResponse(responseCode = "200", description = "Lista de usuarios", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = UsuarioListResponseDto.class))))
     @GetMapping
     public ResponseEntity<List<UsuarioListResponseDto>> findAll() {
         List<UsuarioListResponseDto> list = usuarioService.findAll();
@@ -52,9 +61,8 @@ public class UsuarioController {
 
     @Operation(summary = "Obtener usuario por id", description = "Obtiene un usuario por su id")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Usuario encontrado",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsuarioResponseDto.class))),
-        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Usuario encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsuarioResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content)
     })
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponseDto> findById(@PathVariable Long id) {
@@ -65,13 +73,13 @@ public class UsuarioController {
 
     @Operation(summary = "Actualizar usuario", description = "Actualiza los datos de un usuario existente")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Usuario actualizado",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsuarioResponseDto.class))),
+            @ApiResponse(responseCode = "200", description = "Usuario actualizado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsuarioResponseDto.class))),
             @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = @Content),
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content)
     })
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDto> update(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateRequestDto request) {
+    public ResponseEntity<UsuarioResponseDto> update(@PathVariable Long id,
+            @Valid @RequestBody UsuarioUpdateRequestDto request) {
         UsuarioResponseDto updated = usuarioService.update(id, request);
         return ResponseEntity.ok(updated);
     }

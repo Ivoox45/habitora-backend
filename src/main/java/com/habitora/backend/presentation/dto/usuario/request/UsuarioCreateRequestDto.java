@@ -21,6 +21,6 @@ public class UsuarioCreateRequestDto {
 
     @NotBlank(message = "La contraseña es obligatoria.")
     @Size(min = 8, max = 255)
-    private String contraseña;
+    private String contrasena;
 
 }

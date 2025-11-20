@@ -17,6 +17,6 @@ public class UsuarioUpdateRequestDto {
     private String telefonoWhatsapp;
 
     @Size(min = 8, max = 255)
-    private String contraseña;
+    private String contrasena;
 
 }

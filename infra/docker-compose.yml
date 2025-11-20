@@ -32,28 +32,28 @@ services:
       PMA_HOST: db
       PMA_USER: habitora
       PMA_PASSWORD: secret
-      UPLOAD_LIMIT: 64M
     depends_on:
       db:
         condition: service_healthy
 
-  app:
-    build:
-      context: ..             # carpeta raíz del backend (donde está el Dockerfile y el pom.xml)
-      dockerfile: Dockerfile
-    container_name: habitora_app
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      SPRING_PROFILES_ACTIVE: prod
-      DB_URL: jdbc:mysql://db:3306/habitora?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      DB_USER: habitora
-      DB_PASSWORD: secret
-      TZ: America/Lima
-    ports:
-      - "8080:8080"
+  # app:
+  #   build:
+  #     context: ..
+  #     dockerfile: Dockerfile
+  #   container_name: habitora_app
+  #   restart: unless-stopped
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: prod
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/habitora?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+  #     SPRING_DATASOURCE_USERNAME: habitora
+  #     SPRING_DATASOURCE_PASSWORD: secret
+  #     SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+  #     TZ: America/Lima
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
 
 volumes:
   mysql_data:

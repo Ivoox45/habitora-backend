@@ -1,5 +1,6 @@
 package com.habitora.backend.service.interfaces;
 
+import com.habitora.backend.persistence.entity.Usuario;
 import com.habitora.backend.presentation.dto.usuario.request.UsuarioCreateRequestDto;
 import com.habitora.backend.presentation.dto.usuario.request.UsuarioUpdateRequestDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioListResponseDto;
@@ -19,5 +20,7 @@ public interface IUsuarioService {
     UsuarioResponseDto update(Long id, UsuarioUpdateRequestDto updateDto);
 
     void deleteById(Long id);
+
+     Optional<Usuario> findByEmail(String email);
 
 }

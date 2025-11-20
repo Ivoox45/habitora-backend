@@ -53,10 +53,14 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Transactional
     public UsuarioResponseDto update(Long id, UsuarioUpdateRequestDto updateDto) {
         return usuarioRepository.findById(id).map(existing -> {
-            if (updateDto.getNombreCompleto() != null) existing.setNombreCompleto(updateDto.getNombreCompleto());
-            if (updateDto.getEmail() != null) existing.setEmail(updateDto.getEmail());
-            if (updateDto.getTelefonoWhatsapp() != null) existing.setTelefonoWhatsapp(updateDto.getTelefonoWhatsapp());
-            if (updateDto.getContraseña() != null) existing.setContraseña(updateDto.getContraseña());
+            if (updateDto.getNombreCompleto() != null)
+                existing.setNombreCompleto(updateDto.getNombreCompleto());
+            if (updateDto.getEmail() != null)
+                existing.setEmail(updateDto.getEmail());
+            if (updateDto.getTelefonoWhatsapp() != null)
+                existing.setTelefonoWhatsapp(updateDto.getTelefonoWhatsapp());
+            if (updateDto.getContrasena() != null)
+                existing.setContrasena(updateDto.getContrasena());
             Usuario saved = usuarioRepository.save(existing);
             return usuarioMapper.toResponse(saved);
         }).orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con id: " + id));
@@ -66,6 +70,11 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Transactional
     public void deleteById(Long id) {
         usuarioRepository.deleteById(id);
+    }
+
+    @Override
+    public Optional<Usuario> findByEmail(String email) {
+        return usuarioRepository.findByEmail(email);
     }
 
 }

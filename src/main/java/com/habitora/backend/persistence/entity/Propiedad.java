@@ -43,6 +43,8 @@ public class Propiedad {
   private String direccion;
 
   @PositiveOrZero(message = "La cantidad de pisos no puede ser negativa.")
+  @Min(value = 1, message = "La propiedad debe tener al menos 1 piso.")
+  @Max(value = 10, message = "La propiedad no puede tener más de 10 pisos.")
   @Column(name = "cantidad_pisos", nullable = false)
   private Integer cantidadPisos;
 
