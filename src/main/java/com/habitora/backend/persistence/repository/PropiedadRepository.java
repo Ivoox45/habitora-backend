@@ -13,4 +13,6 @@ public interface PropiedadRepository extends JpaRepository<Propiedad, Long> {
     List<Propiedad> findByUsuarioId(Long usuarioId);
 
     Optional<Propiedad> findByIdAndUsuarioId(Long id, Long usuarioId);
+
+    
 }

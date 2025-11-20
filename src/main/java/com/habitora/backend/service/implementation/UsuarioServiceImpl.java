@@ -1,10 +1,13 @@
 package com.habitora.backend.service.implementation;
 
 import com.habitora.backend.persistence.entity.Usuario;
+import com.habitora.backend.persistence.repository.PropiedadRepository;
 import com.habitora.backend.persistence.repository.UsuarioRepository;
 import com.habitora.backend.presentation.dto.usuario.request.UsuarioCreateRequestDto;
 import com.habitora.backend.presentation.dto.usuario.request.UsuarioUpdateRequestDto;
+import com.habitora.backend.presentation.dto.usuario.response.PropiedadSimpleDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioListResponseDto;
+import com.habitora.backend.presentation.dto.usuario.response.UsuarioPropiedadesDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioResponseDto;
 import com.habitora.backend.service.interfaces.IUsuarioService;
 import com.habitora.backend.util.mapper.UsuarioMapper;
@@ -20,10 +23,13 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final UsuarioMapper usuarioMapper;
+    private final PropiedadRepository propiedadRepository;
 
-    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, UsuarioMapper usuarioMapper) {
+    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, UsuarioMapper usuarioMapper,
+            PropiedadRepository propiedadRepository) {
         this.usuarioRepository = usuarioRepository;
         this.usuarioMapper = usuarioMapper;
+        this.propiedadRepository = propiedadRepository;
     }
 
     @Override
@@ -80,6 +86,27 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Override
     public boolean userHasProperties(Long usuarioId) {
         return usuarioRepository.countPropiedadesByUsuarioId(usuarioId) > 0;
+    }
+
+    @Override
+    public UsuarioPropiedadesDto getUserSimpleProperties(Long usuarioId) {
+
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        List<PropiedadSimpleDto> propiedades = propiedadRepository.findByUsuarioId(usuarioId)
+                .stream()
+                .map(p -> new PropiedadSimpleDto(
+                        p.getId(),
+                        p.getNombre(),
+                        p.getDireccion()))
+                .toList();
+
+        return new UsuarioPropiedadesDto(
+                usuario.getId(),
+                usuario.getNombreCompleto(),
+                usuario.getEmail(),
+                propiedades);
     }
 
 }

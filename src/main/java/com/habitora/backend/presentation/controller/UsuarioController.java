@@ -6,6 +6,7 @@ import com.habitora.backend.presentation.dto.usuario.request.UsuarioUpdateReques
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioResponseDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioTienePropiedadesResponseDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioListResponseDto;
+import com.habitora.backend.presentation.dto.usuario.response.UsuarioPropiedadesDto;
 import com.habitora.backend.service.interfaces.IUsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -117,6 +118,12 @@ public class UsuarioController {
                                 new UsuarioTienePropiedadesResponseDto(
                                                 usuario.getId(),
                                                 tiene));
+        }
+
+        @GetMapping("/{usuarioId}/propiedades-simple")
+        @Operation(summary = "Obtiene solo los datos básicos del usuario y sus propiedades")
+        public ResponseEntity<UsuarioPropiedadesDto> getSimpleProperties(@PathVariable Long usuarioId) {
+                return ResponseEntity.ok(usuarioService.getUserSimpleProperties(usuarioId));
         }
 
 }

@@ -4,6 +4,7 @@ import com.habitora.backend.persistence.entity.Usuario;
 import com.habitora.backend.presentation.dto.usuario.request.UsuarioCreateRequestDto;
 import com.habitora.backend.presentation.dto.usuario.request.UsuarioUpdateRequestDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioListResponseDto;
+import com.habitora.backend.presentation.dto.usuario.response.UsuarioPropiedadesDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioResponseDto;
 
 import java.util.List;
@@ -24,4 +25,7 @@ public interface IUsuarioService {
     Optional<Usuario> findByEmail(String email);
 
     boolean userHasProperties(Long usuarioId);
+
+    UsuarioPropiedadesDto getUserSimpleProperties(Long usuarioId);
+
 }

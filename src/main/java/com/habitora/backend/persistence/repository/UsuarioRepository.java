@@ -18,5 +18,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     @Query("SELECT COUNT(p) FROM Propiedad p WHERE p.usuario.id = :usuarioId")
     long countPropiedadesByUsuarioId(@Param("usuarioId") Long usuarioId);
+    
 
 }
