@@ -36,7 +36,15 @@ public class CorsConfig {
             // Desarrollo local
             originPatterns = new String[] {
                     "http://localhost:*",
-                    "http://127.0.0.1:*"
+                    "http://127.0.0.1:*",
+                    "https://habitora-frontend.vercel.app",
+
+                    // Opcional — si algún día usas tu dominio propio
+                    "https://habitora.app",
+
+                    // Backend Railway (solo si algún cliente externo hace consultas)
+                    "https://habitora-backend-production.up.railway.app",
+                    "http://habitora-backend-production.up.railway.app"
             };
         }
 
