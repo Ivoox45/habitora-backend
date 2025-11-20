@@ -21,25 +21,24 @@ public class CorsConfig {
         if (environment.equalsIgnoreCase("prod")) {
 
             allowedOrigins = new String[]{
-                    // Dominio final real
+
+                    // Dominio final (cuando lo tengas)
                     "https://habitora.app",
 
-                    // Backend Railway (importante!)
-                    "https://habitora-backend-production.up.railway.app",
-                    "https://habitora-backend-development.up.railway.app",
+                    // ⚠️ TU BACKEND REAL DE RAILWAY (con el error de escritura)
+                    "https://habitora-backend-develpment.up.railway.app",
 
-                    // Swagger UI si se carga desde Railway
-                    "http://habitora-backend-production.up.railway.app",
-                    "http://habitora-backend-development.up.railway.app"
+                    // Swagger UI de Railway (por si lo usa)
+                    "http://habitora-backend-develpment.up.railway.app"
             };
 
         } else {
 
-            // Modo desarrollo
+            // --- MODO DESARROLLO ---
             allowedOrigins = new String[]{
-                    "http://localhost:5173",          // Vite
+                    "http://localhost:5173",
                     "http://127.0.0.1:5173",
-                    "http://localhost:8080",          // Swagger local
+                    "http://localhost:8080",
                     "http://127.0.0.1:8080"
             };
         }
@@ -49,7 +48,7 @@ public class CorsConfig {
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOrigins(allowedOrigins)
-                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                        .allowedMethods("*")
                         .allowedHeaders("*")
                         .allowCredentials(true)
                         .maxAge(3600);
