@@ -77,4 +77,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
         return usuarioRepository.findByEmail(email);
     }
 
+    @Override
+    public boolean userHasProperties(Long usuarioId) {
+        return usuarioRepository.countPropiedadesByUsuarioId(usuarioId) > 0;
+    }
+
 }

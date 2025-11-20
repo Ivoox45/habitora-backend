@@ -21,6 +21,7 @@ public interface IUsuarioService {
 
     void deleteById(Long id);
 
-     Optional<Usuario> findByEmail(String email);
+    Optional<Usuario> findByEmail(String email);
 
+    boolean userHasProperties(Long usuarioId);
 }
