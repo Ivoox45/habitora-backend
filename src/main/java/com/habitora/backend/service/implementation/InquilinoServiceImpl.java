@@ -1,7 +1,10 @@
 package com.habitora.backend.service.implementation;
 
 import com.habitora.backend.persistence.entity.Inquilino;
+import com.habitora.backend.persistence.entity.Propiedad;
+import com.habitora.backend.persistence.entity.Usuario;
 import com.habitora.backend.persistence.repository.InquilinoRepository;
+import com.habitora.backend.persistence.repository.PropiedadRepository;
 import com.habitora.backend.presentation.dto.inquilino.request.InquilinoCreateRequestDto;
 import com.habitora.backend.presentation.dto.inquilino.request.InquilinoUpdateRequestDto;
 import com.habitora.backend.presentation.dto.inquilino.response.InquilinoListResponseDto;
@@ -9,6 +12,8 @@ import com.habitora.backend.presentation.dto.inquilino.response.InquilinoRespons
 import com.habitora.backend.service.interfaces.IInquilinoService;
 import com.habitora.backend.util.mapper.InquilinoMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,41 +26,100 @@ import java.util.Optional;
 public class InquilinoServiceImpl implements IInquilinoService {
 
     private final InquilinoRepository inquilinoRepository;
+    private final PropiedadRepository propiedadRepository;
     private final InquilinoMapper mapper;
 
+    /* =======================================================
+       Helpers de seguridad
+       ======================================================= */
+
+    private Usuario getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof Usuario usuario)) {
+            throw new IllegalStateException("No hay usuario autenticado.");
+        }
+        return usuario;
+    }
+
+    private Propiedad validarPropiedad(Long propiedadId) {
+        Usuario actual = getCurrentUser();
+
+        Propiedad propiedad = propiedadRepository.findById(propiedadId)
+                .orElseThrow(() -> new IllegalArgumentException("Propiedad no encontrada."));
+
+        if (!propiedad.getUsuario().getId().equals(actual.getId())) {
+            throw new IllegalArgumentException("No tienes acceso a esta propiedad.");
+        }
+
+        return propiedad;
+    }
+
+    /* =======================================================
+       CREATE
+       ======================================================= */
+
     @Override
-    public InquilinoResponseDto create(InquilinoCreateRequestDto request) {
-        if (inquilinoRepository.existsByNumeroDni(request.getNumeroDni())) {
-            throw new IllegalArgumentException("Ya existe un inquilino con ese DNI.");
+    public InquilinoResponseDto create(Long propiedadId, InquilinoCreateRequestDto request) {
+
+        Propiedad propiedad = validarPropiedad(propiedadId);
+
+        if (inquilinoRepository.existsByPropiedadAndDni(propiedadId, request.getNumeroDni())) {
+            throw new IllegalArgumentException("Ya existe un inquilino con ese DNI en esta propiedad.");
         }
 
         Inquilino entity = mapper.toEntity(request);
+        entity.setPropiedad(propiedad);
+
         inquilinoRepository.save(entity);
+
         return mapper.toResponse(entity);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<InquilinoListResponseDto> findAll() {
-        return mapper.toListResponse(inquilinoRepository.findAll());
-    }
+    /* =======================================================
+       FIND ALL
+       ======================================================= */
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<InquilinoResponseDto> findById(Long id) {
+    public List<InquilinoListResponseDto> findAll(Long propiedadId) {
+
+        validarPropiedad(propiedadId); // asegura que la propiedad es del usuario
+
+        return mapper.toListResponse(inquilinoRepository.findAllByPropiedad(propiedadId));
+    }
+
+    /* =======================================================
+       FIND BY ID
+       ======================================================= */
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<InquilinoResponseDto> findById(Long propiedadId, Long id) {
+
+        validarPropiedad(propiedadId);
+
         return inquilinoRepository.findById(id)
+                .filter(i -> i.getPropiedad().getId().equals(propiedadId))
                 .map(mapper::toResponse);
     }
 
+    /* =======================================================
+       UPDATE
+       ======================================================= */
+
     @Override
-    public InquilinoResponseDto update(Long id, InquilinoUpdateRequestDto request) {
+    public InquilinoResponseDto update(Long propiedadId, Long id, InquilinoUpdateRequestDto request) {
+
+        validarPropiedad(propiedadId);
+
         Inquilino entity = inquilinoRepository.findById(id)
+                .filter(i -> i.getPropiedad().getId().equals(propiedadId))
                 .orElseThrow(() -> new IllegalArgumentException("Inquilino no encontrado."));
 
-        // Validación de DNI duplicado
+        // Validar DNI repetido dentro de la misma propiedad
         if (!entity.getNumeroDni().equals(request.getNumeroDni())
-                && inquilinoRepository.existsByNumeroDni(request.getNumeroDni())) {
-            throw new IllegalArgumentException("Ya existe un inquilino con ese DNI.");
+                && inquilinoRepository.existsByPropiedadAndDni(propiedadId, request.getNumeroDni())) {
+            throw new IllegalArgumentException("Ya existe un inquilino con ese DNI en esta propiedad.");
         }
 
         mapper.updateEntity(entity, request);
@@ -64,25 +128,36 @@ public class InquilinoServiceImpl implements IInquilinoService {
         return mapper.toResponse(entity);
     }
 
+    /* =======================================================
+       DELETE
+       ======================================================= */
+
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(Long propiedadId, Long id) {
+
+        validarPropiedad(propiedadId);
+
         Inquilino entity = inquilinoRepository.findById(id)
+                .filter(i -> i.getPropiedad().getId().equals(propiedadId))
                 .orElseThrow(() -> new IllegalArgumentException("Inquilino no encontrado."));
 
         inquilinoRepository.delete(entity);
     }
 
+    /* =======================================================
+       SEARCH
+       ======================================================= */
 
     @Override
     @Transactional(readOnly = true)
-    public List<InquilinoListResponseDto> search(String query) {
+    public List<InquilinoListResponseDto> search(Long propiedadId, String query) {
 
-        if (query == null || query.trim().isEmpty()) {
-            return mapper.toListResponse(inquilinoRepository.findAll());
+        validarPropiedad(propiedadId);
+
+        if (query == null || query.isBlank()) {
+            return findAll(propiedadId);
         }
 
-        List<Inquilino> result = inquilinoRepository.searchByNombreOrDni(query);
-        return mapper.toListResponse(result);
+        return mapper.toListResponse(inquilinoRepository.searchInquilinos(propiedadId, query));
     }
-
 }

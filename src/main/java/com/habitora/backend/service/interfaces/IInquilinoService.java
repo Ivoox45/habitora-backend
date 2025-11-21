@@ -10,16 +10,15 @@ import java.util.Optional;
 
 public interface IInquilinoService {
 
-    InquilinoResponseDto create(InquilinoCreateRequestDto request);
+    InquilinoResponseDto create(Long propiedadId, InquilinoCreateRequestDto request);
 
-    List<InquilinoListResponseDto> findAll();
+    List<InquilinoListResponseDto> findAll(Long propiedadId);
 
-    Optional<InquilinoResponseDto> findById(Long id);
+    Optional<InquilinoResponseDto> findById(Long propiedadId, Long id);
 
-    InquilinoResponseDto update(Long id, InquilinoUpdateRequestDto request);
+    InquilinoResponseDto update(Long propiedadId, Long id, InquilinoUpdateRequestDto request);
 
-    void deleteById(Long id);
+    void deleteById(Long propiedadId, Long id);
 
-    List<InquilinoListResponseDto> search(String query);
-
+    List<InquilinoListResponseDto> search(Long propiedadId, String query);
 }

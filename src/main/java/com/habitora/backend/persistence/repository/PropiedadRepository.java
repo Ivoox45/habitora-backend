@@ -14,5 +14,6 @@ public interface PropiedadRepository extends JpaRepository<Propiedad, Long> {
 
     Optional<Propiedad> findByIdAndUsuarioId(Long id, Long usuarioId);
 
-    
+    boolean existsByIdAndUsuarioId(Long propiedadId, Long usuarioId);
+
 }

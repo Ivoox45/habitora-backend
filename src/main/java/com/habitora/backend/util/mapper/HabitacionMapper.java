@@ -10,10 +10,12 @@ import com.habitora.backend.presentation.dto.habitacion.response.HabitacionListR
 @Mapper(componentModel = "spring")
 public interface HabitacionMapper {
 
+    /** Respuesta completa */
     @Mapping(target = "propiedadId", source = "propiedad.id")
     @Mapping(target = "pisoId", source = "piso.id")
     HabitacionResponseDto toResponse(Habitacion habitacion);
 
+    /** Respuesta “list” corta */
     @Mapping(target = "pisoId", source = "piso.id")
     @Mapping(target = "estado", source = "estado")
     HabitacionListResponseDto toListResponse(Habitacion habitacion);

@@ -5,15 +5,18 @@ import com.habitora.backend.presentation.dto.inquilino.request.InquilinoUpdateRe
 import com.habitora.backend.presentation.dto.inquilino.response.InquilinoListResponseDto;
 import com.habitora.backend.presentation.dto.inquilino.response.InquilinoResponseDto;
 import com.habitora.backend.service.interfaces.IInquilinoService;
+
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,76 +24,91 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/inquilinos")
-@Tag(name = "Inquilinos", description = "APIs para gestionar inquilinos")
+@RequestMapping("/api/propiedades/{propiedadId}/inquilinos")
+@Tag(name = "Inquilinos", description = "Gestión de inquilinos por propiedad (multi-propiedad por usuario)")
 @RequiredArgsConstructor
 public class InquilinoController {
 
-    private final IInquilinoService inquilinoService;
+        private final IInquilinoService service;
 
-    @Operation(summary = "Crear inquilino")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Inquilino creado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InquilinoResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content)
-    })
-    @PostMapping
-    public ResponseEntity<InquilinoResponseDto> create(
-            @Valid @RequestBody InquilinoCreateRequestDto request) {
-        InquilinoResponseDto response = inquilinoService.create(request);
-        return ResponseEntity
-                .created(URI.create("/api/inquilinos/" + response.getId()))
-                .body(response);
-    }
+        @Operation(summary = "Crear un inquilino en la propiedad", description = "Registra un nuevo inquilino dentro de la propiedad indicada en la ruta.")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "201", description = "Inquilino creado correctamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InquilinoResponseDto.class))),
+                        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content)
+        })
+        @PostMapping
+        public ResponseEntity<InquilinoResponseDto> create(
+                        @PathVariable Long propiedadId,
+                        @Valid @RequestBody InquilinoCreateRequestDto request) {
 
-    @Operation(summary = "Listar inquilinos")
-    @ApiResponse(responseCode = "200", description = "Lista de inquilinos", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InquilinoListResponseDto.class))))
-    @GetMapping
-    public ResponseEntity<List<InquilinoListResponseDto>> findAll() {
-        return ResponseEntity.ok(inquilinoService.findAll());
-    }
+                InquilinoResponseDto response = service.create(propiedadId, request);
 
-    @Operation(summary = "Obtener inquilino por id")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Inquilino encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InquilinoResponseDto.class))),
-            @ApiResponse(responseCode = "404", description = "Inquilino no encontrado", content = @Content)
-    })
-    @GetMapping("/{id}")
-    public ResponseEntity<InquilinoResponseDto> findById(@PathVariable Long id) {
-        return inquilinoService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
+                return ResponseEntity
+                                .created(URI.create(
+                                                "/api/propiedades/" + propiedadId + "/inquilinos/" + response.getId()))
+                                .body(response);
+        }
 
-    @Operation(summary = "Actualizar inquilino")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Inquilino actualizado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InquilinoResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Inquilino no encontrado", content = @Content)
-    })
-    @PutMapping("/{id}")
-    public ResponseEntity<InquilinoResponseDto> update(
-            @PathVariable Long id,
-            @Valid @RequestBody InquilinoUpdateRequestDto request) {
-        InquilinoResponseDto updated = inquilinoService.update(id, request);
-        return ResponseEntity.ok(updated);
-    }
+        @Operation(summary = "Listar inquilinos de la propiedad", description = "Devuelve todos los inquilinos registrados dentro de la propiedad seleccionada.")
+        @ApiResponse(responseCode = "200", description = "Lista de inquilinos obtenida", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InquilinoListResponseDto.class))))
+        @GetMapping
+        public ResponseEntity<List<InquilinoListResponseDto>> list(
+                        @PathVariable Long propiedadId) {
 
-    @Operation(summary = "Eliminar inquilino")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Inquilino eliminado", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Inquilino no encontrado", content = @Content)
-    })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        inquilinoService.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }
+                return ResponseEntity.ok(service.findAll(propiedadId));
+        }
 
-    @GetMapping("/search")
-    @Operation(summary = "Buscar inquilinos por nombre o DNI (búsqueda parcial)")
-    public ResponseEntity<List<InquilinoListResponseDto>> search(
-            @RequestParam(required = false) String query) {
-        return ResponseEntity.ok(inquilinoService.search(query));
-    }
+        @Operation(summary = "Obtener un inquilino por ID", description = "Retorna el inquilino, siempre que pertenezca a esta propiedad.")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Inquilino encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InquilinoResponseDto.class))),
+                        @ApiResponse(responseCode = "404", description = "Inquilino no pertenece a la propiedad o no existe", content = @Content)
+        })
+        @GetMapping("/{id}")
+        public ResponseEntity<InquilinoResponseDto> findById(
+                        @PathVariable Long propiedadId,
+                        @PathVariable Long id) {
 
+                return service.findById(propiedadId, id)
+                                .map(ResponseEntity::ok)
+                                .orElseGet(() -> ResponseEntity.notFound().build());
+        }
+
+        @Operation(summary = "Actualizar datos de un inquilino", description = "Permite editar la información de un inquilino si pertenece a esta propiedad.")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Inquilino actualizado correctamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = InquilinoResponseDto.class))),
+                        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content),
+                        @ApiResponse(responseCode = "404", description = "Inquilino no pertenece a la propiedad", content = @Content)
+        })
+        @PutMapping("/{id}")
+        public ResponseEntity<InquilinoResponseDto> update(
+                        @PathVariable Long propiedadId,
+                        @PathVariable Long id,
+                        @Valid @RequestBody InquilinoUpdateRequestDto request) {
+
+                return ResponseEntity.ok(service.update(propiedadId, id, request));
+        }
+
+        @Operation(summary = "Eliminar inquilino", description = "Elimina un inquilino, siempre que pertenezca a esta propiedad.")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "204", description = "Inquilino eliminado correctamente", content = @Content),
+                        @ApiResponse(responseCode = "404", description = "Inquilino no pertenece a la propiedad", content = @Content)
+        })
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> delete(
+                        @PathVariable Long propiedadId,
+                        @PathVariable Long id) {
+
+                service.deleteById(propiedadId, id);
+                return ResponseEntity.noContent().build();
+        }
+
+        @Operation(summary = "Buscar inquilinos por nombre o DNI", description = "Busca dentro de los inquilinos pertenecientes a la propiedad usando coincidencia parcial.")
+        @ApiResponse(responseCode = "200", description = "Lista filtrada de inquilinos", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InquilinoListResponseDto.class))))
+        @GetMapping("/search")
+        public ResponseEntity<List<InquilinoListResponseDto>> search(
+                        @PathVariable Long propiedadId,
+                        @RequestParam(required = false) String query) {
+
+                return ResponseEntity.ok(service.search(propiedadId, query));
+        }
 }

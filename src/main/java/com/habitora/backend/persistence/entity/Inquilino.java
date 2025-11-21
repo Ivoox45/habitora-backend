@@ -8,15 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(
-        name = "inquilinos",
-        indexes = {
+@Table(name = "inquilinos", indexes = {
                 @Index(name = "idx_inquilino_dni", columnList = "numero_dni")
-        },
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uk_inquilino_dni", columnNames = "numero_dni")
-        }
-)
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,36 +21,38 @@ import java.util.List;
 @EqualsAndHashCode(exclude = "contratos")
 public class Inquilino {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", updatable = false, nullable = false)
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @NotBlank(message = "El nombre completo del inquilino es obligatorio.")
-    @Size(max = 140, message = "El nombre completo no puede exceder los 140 caracteres.")
-    @Column(name = "nombre_completo", nullable = false, length = 140)
-    private String nombreCompleto;
+        @NotNull(message = "El inquilino debe pertenecer a una propiedad.")
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
+        @JoinColumn(name = "propiedad_id", nullable = false, foreignKey = @ForeignKey(name = "fk_inquilino_propiedad"))
+        private Propiedad propiedad;
 
-    @NotBlank(message = "El número de DNI es obligatorio.")
-    @Size(max = 20, message = "El DNI no puede exceder los 20 caracteres.")
-    @Column(name = "numero_dni", nullable = false, unique = true, length = 20)
-    private String numeroDni;
+        @NotBlank
+        @Size(max = 140)
+        @Column(nullable = false, length = 140)
+        private String nombreCompleto;
 
-    @Email(message = "El formato del correo electrónico no es válido.")
-    @Size(max = 160, message = "El correo electrónico no puede exceder los 160 caracteres.")
-    @Column(name = "email", length = 160)
-    private String email;
+        @NotBlank
+        @Size(max = 20)
+        @Column(nullable = false, length = 20)
+        private String numeroDni;
 
-    @Size(max = 40, message = "El número de WhatsApp no puede exceder los 40 caracteres.")
-    @Column(name = "telefono_whatsapp", length = 40)
-    private String telefonoWhatsapp;
+        @Email
+        @Size(max = 160)
+        private String email;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "inquilino", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Contrato> contratos = new ArrayList<>();
+        @Size(max = 40)
+        private String telefonoWhatsapp;
 
-    public void addContrato(Contrato contrato) {
-        contratos.add(contrato);
-        contrato.setInquilino(this);
-    }
+        @Builder.Default
+        @OneToMany(mappedBy = "inquilino", cascade = CascadeType.ALL, orphanRemoval = true)
+        private List<Contrato> contratos = new ArrayList<>();
+
+        public void addContrato(Contrato contrato) {
+                contratos.add(contrato);
+                contrato.setInquilino(this);
+        }
 }
