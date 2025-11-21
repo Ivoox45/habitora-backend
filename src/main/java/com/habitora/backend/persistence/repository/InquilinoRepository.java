@@ -34,4 +34,27 @@ public interface InquilinoRepository extends JpaRepository<Inquilino, Long> {
                           AND i.numeroDni = :dni
                         """)
         boolean existsByPropiedadAndDni(Long propiedadId, String dni);
+
+        @Query("""
+                            SELECT i FROM Inquilino i
+                            WHERE i.propiedad.id = :propiedadId
+                              AND (
+                                   LOWER(i.nombreCompleto) LIKE LOWER(CONCAT(:query, '%'))
+                                   OR i.numeroDni LIKE CONCAT(:query, '%')
+                              )
+                            ORDER BY i.nombreCompleto ASC
+                        """)
+        List<Inquilino> search(Long propiedadId, String query);
+
+        @Query("""
+                            SELECT i FROM Inquilino i
+                            WHERE i.propiedad.id = :propiedadId
+                              AND NOT EXISTS (
+                                  SELECT 1 FROM Contrato c
+                                  WHERE c.inquilino.id = i.id
+                                    AND c.estado = 'ACTIVO'
+                              )
+                            ORDER BY i.nombreCompleto ASC
+                        """)
+        List<Inquilino> findDisponibles(Long propiedadId);
 }

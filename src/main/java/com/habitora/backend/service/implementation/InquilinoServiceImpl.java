@@ -11,7 +11,9 @@ import com.habitora.backend.presentation.dto.inquilino.response.InquilinoListRes
 import com.habitora.backend.presentation.dto.inquilino.response.InquilinoResponseDto;
 import com.habitora.backend.service.interfaces.IInquilinoService;
 import com.habitora.backend.util.mapper.InquilinoMapper;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -76,15 +78,25 @@ public class InquilinoServiceImpl implements IInquilinoService {
     }
 
     /* =======================================================
-       FIND ALL
+       FIND ALL + FILTROS
        ======================================================= */
 
     @Override
-    @Transactional(readOnly = true)
-    public List<InquilinoListResponseDto> findAll(Long propiedadId) {
+    public List<InquilinoListResponseDto> findAll(Long propiedadId, Boolean disponibles, String query) {
 
-        validarPropiedad(propiedadId); // asegura que la propiedad es del usuario
+        validarPropiedad(propiedadId);
 
+        // FILTRO 1: disponibles = true (sin contrato activo)
+        if (Boolean.TRUE.equals(disponibles)) {
+            return mapper.toListResponse(inquilinoRepository.findDisponibles(propiedadId));
+        }
+
+        // FILTRO 2: búsqueda por texto
+        if (query != null && !query.isBlank()) {
+            return mapper.toListResponse(inquilinoRepository.search(propiedadId, query));
+        }
+
+        // DEFAULT
         return mapper.toListResponse(inquilinoRepository.findAllByPropiedad(propiedadId));
     }
 
@@ -116,9 +128,10 @@ public class InquilinoServiceImpl implements IInquilinoService {
                 .filter(i -> i.getPropiedad().getId().equals(propiedadId))
                 .orElseThrow(() -> new IllegalArgumentException("Inquilino no encontrado."));
 
-        // Validar DNI repetido dentro de la misma propiedad
-        if (!entity.getNumeroDni().equals(request.getNumeroDni())
-                && inquilinoRepository.existsByPropiedadAndDni(propiedadId, request.getNumeroDni())) {
+        // Validar DNI repetido dentro de la propiedad
+        if (!entity.getNumeroDni().equals(request.getNumeroDni()) &&
+                inquilinoRepository.existsByPropiedadAndDni(propiedadId, request.getNumeroDni())) {
+
             throw new IllegalArgumentException("Ya existe un inquilino con ese DNI en esta propiedad.");
         }
 
@@ -145,7 +158,7 @@ public class InquilinoServiceImpl implements IInquilinoService {
     }
 
     /* =======================================================
-       SEARCH
+       SEARCH DIRECTO
        ======================================================= */
 
     @Override
@@ -155,9 +168,9 @@ public class InquilinoServiceImpl implements IInquilinoService {
         validarPropiedad(propiedadId);
 
         if (query == null || query.isBlank()) {
-            return findAll(propiedadId);
+            return findAll(propiedadId, null, null); // llamada limpia
         }
 
-        return mapper.toListResponse(inquilinoRepository.searchInquilinos(propiedadId, query));
+        return mapper.toListResponse(inquilinoRepository.search(propiedadId, query));
     }
 }

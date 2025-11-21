@@ -12,7 +12,7 @@ public interface IInquilinoService {
 
     InquilinoResponseDto create(Long propiedadId, InquilinoCreateRequestDto request);
 
-    List<InquilinoListResponseDto> findAll(Long propiedadId);
+    List<InquilinoListResponseDto> findAll(Long propiedadId, Boolean disponibles, String query);
 
     Optional<InquilinoResponseDto> findById(Long propiedadId, Long id);
 
