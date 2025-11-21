@@ -24,10 +24,17 @@ public class PagoController {
 
     private final IPagoService pagoService;
 
+    // ======================================================
+    // REGISTRAR PAGO DE UNA FACTURA
+    // ======================================================
     @PostMapping
     @Operation(
             summary = "Registrar pago de una factura",
-            description = "Registra un pago completo de una factura específica (monto exacto)."
+            description = """
+                    Registra un pago COMPLETO de una factura específica.
+                    El monto debe ser exactamente igual al total de la factura.
+                    Después de registrar el pago, la factura se marca como PAGADA.
+                    """
     )
     @ApiResponse(
             responseCode = "200",
@@ -45,10 +52,13 @@ public class PagoController {
         return ResponseEntity.ok(pagoService.registrarPago(propiedadId, facturaId, request));
     }
 
+    // ======================================================
+    // LISTAR PAGOS DE UNA FACTURA (opcional, para detalle)
+    // ======================================================
     @GetMapping
     @Operation(
             summary = "Listar pagos de una factura",
-            description = "Devuelve todos los pagos registrados para una factura."
+            description = "Devuelve todos los pagos registrados para una factura (normalmente 1, ya que son pagos completos)."
     )
     @ApiResponse(
             responseCode = "200",

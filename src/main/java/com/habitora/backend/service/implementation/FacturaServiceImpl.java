@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,7 +56,7 @@ public class FacturaServiceImpl implements IFacturaService {
     @Override
     public void generarFacturasParaContrato(Contrato contrato) {
 
-        // Si el contrato no tiene fecha fin, de momento no generamos nada
+        // Si no hay fecha fin, por ahora no generamos nada automáticamente
         if (contrato.getFechaFin() == null) {
             return;
         }
@@ -73,7 +74,7 @@ public class FacturaServiceImpl implements IFacturaService {
             LocalDate periodoInicio = mesActual.atDay(1);
             LocalDate periodoFin = mesActual.atEndOfMonth();
 
-            // Ajuste por si el contrato inicia a mitad de mes
+            // Ajustes si el contrato inicia/termina a mitad de mes
             if (periodoInicio.isBefore(inicio)) {
                 periodoInicio = inicio;
             }
@@ -81,7 +82,7 @@ public class FacturaServiceImpl implements IFacturaService {
                 periodoFin = fin;
             }
 
-            // Vencimiento: día 5 del mes (puedes cambiar la lógica si quieres)
+            // Vencimiento: día 5 del mes correspondiente
             LocalDate fechaVencimiento = mesActual.atDay(5);
 
             Factura factura = Factura.builder()
@@ -90,7 +91,6 @@ public class FacturaServiceImpl implements IFacturaService {
                     .periodoFin(periodoFin)
                     .fechaVencimiento(fechaVencimiento)
                     .montoRenta(montoMensual)
-                    .totalAPagar(montoMensual)
                     .estado(Factura.EstadoFactura.ABIERTA)
                     .build();
 
@@ -98,6 +98,32 @@ public class FacturaServiceImpl implements IFacturaService {
 
             mesActual = mesActual.plusMonths(1);
         }
+    }
+
+    /* ===================== helpers de mapeo con flags ===================== */
+
+    private FacturaResponseDto buildDtoConFlags(Factura f) {
+        FacturaResponseDto dto = facturaMapper.toResponse(f);
+
+        LocalDate hoy = LocalDate.now();
+
+        boolean pagada = f.getEstado() == Factura.EstadoFactura.PAGADA;
+        boolean vencidaPorEstado = f.getEstado() == Factura.EstadoFactura.VENCIDA;
+        boolean vencimientoPasado = f.getFechaVencimiento().isBefore(hoy);
+
+        boolean esVencida = vencidaPorEstado || (!pagada && vencimientoPasado);
+
+        dto.setEsPagada(pagada);
+        dto.setEsVencida(esVencida);
+
+        if (esVencida && !pagada) {
+            long dias = ChronoUnit.DAYS.between(f.getFechaVencimiento(), hoy);
+            dto.setDiasRetraso((int) dias);
+        } else {
+            dto.setDiasRetraso(0);
+        }
+
+        return dto;
     }
 
     /* ===================== listar facturas ===================== */
@@ -116,19 +142,8 @@ public class FacturaServiceImpl implements IFacturaService {
             facturas = facturaRepository.findByContratoPropiedadId(propiedadId);
         }
 
-        // Actualizar estado a VENCIDA si corresponde (simple)
-        LocalDate hoy = LocalDate.now();
-        facturas.forEach(f -> {
-            if (f.getEstado() == Factura.EstadoFactura.ABIERTA &&
-                    f.getFechaVencimiento().isBefore(hoy)) {
-                f.setEstado(Factura.EstadoFactura.VENCIDA);
-            }
-        });
-
-        // se persisten los cambios de estado automáticamente por @Transactional
-
         return facturas.stream()
-                .map(facturaMapper::toResponse)
+                .map(this::buildDtoConFlags)
                 .toList();
     }
 
@@ -142,7 +157,7 @@ public class FacturaServiceImpl implements IFacturaService {
 
         return facturas.stream()
                 .filter(f -> f.getContrato().getPropiedad().getId().equals(propiedadId))
-                .map(facturaMapper::toResponse)
+                .map(this::buildDtoConFlags)
                 .toList();
     }
 }

@@ -1,14 +1,13 @@
 package com.habitora.backend.service.interfaces;
 
-import java.io.IOException;
-import java.util.List;
-
-import org.springframework.web.multipart.MultipartFile;
-
 import com.habitora.backend.persistence.entity.Contrato;
 import com.habitora.backend.presentation.dto.contrato.request.ContratoCreateRequestDto;
 import com.habitora.backend.presentation.dto.contrato.response.ContratoDetailResponseDto;
 import com.habitora.backend.presentation.dto.contrato.response.ContratoListResponseDto;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 public interface IContratoService {
 
@@ -20,8 +19,7 @@ public interface IContratoService {
 
     ContratoDetailResponseDto finalizar(Long propiedadId, Long contratoId);
 
-    ContratoDetailResponseDto uploadFirma(Long propiedadId, Long contratoId, MultipartFile file)
-            throws IOException;
+    ContratoDetailResponseDto uploadFirma(Long propiedadId, Long contratoId, MultipartFile file) throws IOException;
 
     byte[] getFirma(Long propiedadId, Long contratoId);
 }

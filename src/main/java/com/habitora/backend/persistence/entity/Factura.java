@@ -37,11 +37,19 @@ public class Factura {
     @Column(name = "id", updatable = false, nullable = false)
     private Long id;
 
+    // ============================
+    // RELACIÓN CON CONTRATO
+    // ============================
+
     @NotNull(message = "La factura debe estar asociada a un contrato.")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "contrato_id", nullable = false,
-                foreignKey = @ForeignKey(name = "fk_factura_contrato"))
+            foreignKey = @ForeignKey(name = "fk_factura_contrato"))
     private Contrato contrato;
+
+    // ============================
+    // PERIODO FACTURADO
+    // ============================
 
     @NotNull(message = "La fecha de inicio del periodo es obligatoria.")
     @Column(name = "periodo_inicio", nullable = false)
@@ -51,23 +59,36 @@ public class Factura {
     @Column(name = "periodo_fin", nullable = false)
     private LocalDate periodoFin;
 
+    // ============================
+    // VENCIMIENTO
+    // ============================
+
     @NotNull(message = "La fecha de vencimiento es obligatoria.")
     @Column(name = "fecha_vencimiento", nullable = false)
     private LocalDate fechaVencimiento;
+
+    // ============================
+    // MONTOS
+    // ============================
 
     @NotNull(message = "El monto de renta es obligatorio.")
     @PositiveOrZero(message = "El monto de renta no puede ser negativo.")
     @Column(name = "monto_renta", nullable = false, precision = 12, scale = 2)
     private BigDecimal montoRenta;
 
-    @NotNull(message = "El monto total a pagar es obligatorio.")
-    @PositiveOrZero(message = "El total a pagar no puede ser negativo.")
-    @Column(name = "total_a_pagar", nullable = false, precision = 12, scale = 2)
-    private BigDecimal totalAPagar;
+    // (totalAPagar eliminado, ya no se usa)
+
+    // ============================
+    // ESTADO
+    // ============================
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 20)
     private EstadoFactura estado;
+
+    // ============================
+    // PAGOS
+    // ============================
 
     @Builder.Default
     @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -86,6 +107,10 @@ public class Factura {
         recordatorios.add(recordatorio);
         recordatorio.setFactura(this);
     }
+
+    // ============================
+    // ENUM
+    // ============================
 
     public enum EstadoFactura {
         ABIERTA,

@@ -1,34 +1,61 @@
 package com.habitora.backend.util.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-
 import com.habitora.backend.persistence.entity.Contrato;
+import com.habitora.backend.persistence.entity.Habitacion;
+import com.habitora.backend.persistence.entity.Inquilino;
 import com.habitora.backend.presentation.dto.contrato.response.ContratoDetailResponseDto;
 import com.habitora.backend.presentation.dto.contrato.response.ContratoListResponseDto;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface ContratoMapper {
+@Component
+public class ContratoMapper {
 
-    @Mapping(target = "estado", expression = "java(c.getEstado().name())")
-    @Mapping(target = "inquilinoId", source = "inquilino.id")
-    @Mapping(target = "inquilinoNombre", source = "inquilino.nombreCompleto")
-    @Mapping(target = "inquilinoDni", source = "inquilino.numeroDni")
-    @Mapping(target = "habitacionId", source = "habitacion.id")
-    @Mapping(target = "habitacionCodigo", source = "habitacion.codigo")
-    ContratoListResponseDto toListDto(Contrato c);
+    public ContratoListResponseDto toListDto(Contrato contrato) {
+        ContratoListResponseDto dto = new ContratoListResponseDto();
 
-    @Mapping(target = "propiedadId", source = "propiedad.id")
-    @Mapping(target = "estado", expression = "java(c.getEstado().name())")
-    @Mapping(target = "inquilinoId", source = "inquilino.id")
-    @Mapping(target = "inquilinoNombre", source = "inquilino.nombreCompleto")
-    @Mapping(target = "inquilinoDni", source = "inquilino.numeroDni")
-    @Mapping(target = "inquilinoEmail", source = "inquilino.email")
-    @Mapping(target = "inquilinoTelefono", source = "inquilino.telefonoWhatsapp")
-    @Mapping(target = "habitacionId", source = "habitacion.id")
-    @Mapping(target = "habitacionCodigo", source = "habitacion.codigo")
-    @Mapping(target = "habitacionEstado", expression = "java(c.getHabitacion().getEstado().name())")
-    @Mapping(target = "habitacionPrecioRenta", expression = "java(c.getHabitacion().getPrecioRenta().toPlainString())")
-    @Mapping(target = "tieneFirma", expression = "java(c.getFirmaInquilino() != null)")
-    ContratoDetailResponseDto toDetailDto(Contrato c);
+        dto.setId(contrato.getId());
+        dto.setEstado(contrato.getEstado().name());
+        dto.setFechaInicio(contrato.getFechaInicio());
+        dto.setFechaFin(contrato.getFechaFin());
+        dto.setMontoDeposito(contrato.getMontoDeposito());
+
+        Inquilino inq = contrato.getInquilino();
+        dto.setInquilinoId(inq.getId());
+        dto.setInquilinoNombre(inq.getNombreCompleto());
+        dto.setInquilinoDni(inq.getNumeroDni());
+
+        Habitacion hab = contrato.getHabitacion();
+        dto.setHabitacionId(hab.getId());
+        dto.setHabitacionCodigo(hab.getCodigo());
+
+        return dto;
+    }
+
+    public ContratoDetailResponseDto toDetailDto(Contrato contrato) {
+        ContratoDetailResponseDto dto = new ContratoDetailResponseDto();
+
+        dto.setId(contrato.getId());
+        dto.setPropiedadId(contrato.getPropiedad().getId());
+        dto.setEstado(contrato.getEstado().name());
+        dto.setFechaInicio(contrato.getFechaInicio());
+        dto.setFechaFin(contrato.getFechaFin());
+        dto.setMontoDeposito(contrato.getMontoDeposito());
+
+        Inquilino inq = contrato.getInquilino();
+        dto.setInquilinoId(inq.getId());
+        dto.setInquilinoNombre(inq.getNombreCompleto());
+        dto.setInquilinoDni(inq.getNumeroDni());
+        dto.setInquilinoEmail(inq.getEmail());
+        dto.setInquilinoTelefono(inq.getTelefonoWhatsapp());
+
+        Habitacion hab = contrato.getHabitacion();
+        dto.setHabitacionId(hab.getId());
+        dto.setHabitacionCodigo(hab.getCodigo());
+        dto.setHabitacionEstado(hab.getEstado().name());
+        dto.setHabitacionPrecioRenta(hab.getPrecioRenta().toPlainString());
+
+        dto.setTieneFirma(contrato.getFirmaInquilino() != null);
+
+        return dto;
+    }
 }

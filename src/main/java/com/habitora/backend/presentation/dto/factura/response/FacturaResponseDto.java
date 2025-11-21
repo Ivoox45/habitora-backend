@@ -22,7 +22,11 @@ public class FacturaResponseDto {
     private LocalDate fechaVencimiento;
 
     private BigDecimal montoRenta;
-    private BigDecimal totalAPagar;
 
     private String estado; // ABIERTA, PAGADA, VENCIDA, CANCELADA
+
+    // 🚀 Nuevos campos para el frontend (flags)
+    private boolean esPagada;
+    private boolean esVencida;
+    private int diasRetraso; // 0 si no aplica
 }

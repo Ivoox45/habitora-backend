@@ -8,10 +8,19 @@ import java.util.List;
 
 public interface IFacturaService {
 
-    // Se llama cuando se crea un contrato
+    /**
+     * Genera las facturas mensuales para todo el rango del contrato,
+     * usando el precio de la habitación como monto de renta.
+     */
     void generarFacturasParaContrato(Contrato contrato);
 
+    /**
+     * Lista facturas de una propiedad, con filtro opcional por estado.
+     */
     List<FacturaResponseDto> listarPorPropiedad(Long propiedadId, Factura.EstadoFactura estado);
 
+    /**
+     * Lista facturas de un contrato específico dentro de una propiedad.
+     */
     List<FacturaResponseDto> listarPorContrato(Long propiedadId, Long contratoId);
 }

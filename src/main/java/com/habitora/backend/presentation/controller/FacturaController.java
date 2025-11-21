@@ -23,10 +23,19 @@ public class FacturaController {
 
     private final IFacturaService facturaService;
 
+    // ======================================================
+    // LISTAR FACTURAS POR PROPIEDAD
+    // ======================================================
     @GetMapping
     @Operation(
             summary = "Listar facturas de una propiedad",
-            description = "Lista todas las facturas de la propiedad, opcionalmente filtradas por estado."
+            description = """
+                    Lista todas las facturas de la propiedad.
+                    
+                    Uso típico en el módulo Pagos:
+                    - Pagos pendientes: estado = ABIERTA (y/o VENCIDA)
+                    - Historial de pagos: estado = PAGADA
+                    """
     )
     @ApiResponse(
             responseCode = "200",
@@ -43,6 +52,9 @@ public class FacturaController {
         return ResponseEntity.ok(facturaService.listarPorPropiedad(propiedadId, estado));
     }
 
+    // ======================================================
+    // LISTAR FACTURAS DE UN CONTRATO
+    // ======================================================
     @GetMapping("/contrato/{contratoId}")
     @Operation(
             summary = "Listar facturas de un contrato",

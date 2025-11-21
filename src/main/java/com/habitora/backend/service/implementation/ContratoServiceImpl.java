@@ -6,6 +6,7 @@ import com.habitora.backend.presentation.dto.contrato.request.ContratoCreateRequ
 import com.habitora.backend.presentation.dto.contrato.response.ContratoDetailResponseDto;
 import com.habitora.backend.presentation.dto.contrato.response.ContratoListResponseDto;
 import com.habitora.backend.service.interfaces.IContratoService;
+import com.habitora.backend.service.interfaces.IFacturaService;
 import com.habitora.backend.util.mapper.ContratoMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class ContratoServiceImpl implements IContratoService {
     private final PropiedadRepository propiedadRepository;
     private final HabitacionRepository habitacionRepository;
     private final InquilinoRepository inquilinoRepository;
+    private final IFacturaService facturaService;
     private final ContratoMapper mapper;
 
     /* =======================================================
@@ -56,7 +58,7 @@ public class ContratoServiceImpl implements IContratoService {
     }
 
     /* =======================================================
-       CREATE
+       CREATE CONTRATO
        ======================================================= */
     @Override
     public ContratoDetailResponseDto create(Long propiedadId, ContratoCreateRequestDto request) {
@@ -77,12 +79,12 @@ public class ContratoServiceImpl implements IContratoService {
             throw new IllegalArgumentException("Esa habitación no pertenece a esta propiedad.");
         }
 
-        // validar que no tenga contrato activo
+        // validar habitación sin contrato activo
         if (contratoRepository.existsActivoInHabitacion(habitacion.getId())) {
             throw new IllegalArgumentException("La habitación ya tiene un contrato activo.");
         }
 
-        // crear contrato
+        // Crear contrato
         Contrato contrato = Contrato.builder()
                 .propiedad(propiedad)
                 .habitacion(habitacion)
@@ -96,15 +98,18 @@ public class ContratoServiceImpl implements IContratoService {
 
         contratoRepository.save(contrato);
 
-        // actualizar estado de la habitación
+        // Marcar habitación como ocupada
         habitacion.setEstado(Habitacion.EstadoHabitacion.OCUPADA);
         habitacionRepository.save(habitacion);
+
+        // ⚡ Generar facturas mensuales automáticamente
+        facturaService.generarFacturasParaContrato(contrato);
 
         return mapper.toDetailDto(contrato);
     }
 
     /* =======================================================
-       LISTAR + FILTRAR
+       LISTAR CONTRATOS
        ======================================================= */
     @Override
     @Transactional(readOnly = true)
@@ -120,7 +125,7 @@ public class ContratoServiceImpl implements IContratoService {
     }
 
     /* =======================================================
-       GET DETAIL
+       DETALLE DE CONTRATO
        ======================================================= */
     @Override
     @Transactional(readOnly = true)
@@ -191,7 +196,7 @@ public class ContratoServiceImpl implements IContratoService {
     }
 
     /* =======================================================
-       OBTENER FIRMA
+       OBTENER FIRMA DIGITAL
        ======================================================= */
     @Override
     @Transactional(readOnly = true)

@@ -78,8 +78,8 @@ public class PagoServiceImpl implements IPagoService {
             throw new IllegalArgumentException("La factura está cancelada.");
         }
 
-        // Solo pagos completos
-        if (request.getMonto().compareTo(factura.getTotalAPagar()) != 0) {
+        // Solo pagos completos: debe coincidir con montoRenta
+        if (request.getMonto().compareTo(factura.getMontoRenta()) != 0) {
             throw new IllegalArgumentException("El pago debe ser por el monto exacto de la factura.");
         }
 
