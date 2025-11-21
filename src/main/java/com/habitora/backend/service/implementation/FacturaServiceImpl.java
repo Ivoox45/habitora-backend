@@ -1,0 +1,148 @@
+package com.habitora.backend.service.implementation;
+
+import com.habitora.backend.persistence.entity.*;
+import com.habitora.backend.persistence.repository.FacturaRepository;
+import com.habitora.backend.persistence.repository.PropiedadRepository;
+import com.habitora.backend.presentation.dto.factura.response.FacturaResponseDto;
+import com.habitora.backend.service.interfaces.IFacturaService;
+import com.habitora.backend.util.mapper.FacturaMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.List;
+import java.util.Objects;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class FacturaServiceImpl implements IFacturaService {
+
+    private final FacturaRepository facturaRepository;
+    private final PropiedadRepository propiedadRepository;
+    private final FacturaMapper facturaMapper;
+
+    /* ===================== helpers seguridad ===================== */
+
+    private Usuario getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof Usuario usuario)) {
+            throw new IllegalStateException("No hay usuario autenticado.");
+        }
+        return usuario;
+    }
+
+    private Propiedad validarPropiedadDelUsuario(Long propiedadId) {
+        Usuario actual = getCurrentUser();
+
+        Propiedad propiedad = propiedadRepository.findById(propiedadId)
+                .orElseThrow(() -> new IllegalArgumentException("Propiedad no encontrada."));
+
+        if (!Objects.equals(propiedad.getUsuario().getId(), actual.getId())) {
+            throw new IllegalArgumentException("No tienes acceso a esta propiedad.");
+        }
+
+        return propiedad;
+    }
+
+    /* ===================== generación de facturas ===================== */
+
+    @Override
+    public void generarFacturasParaContrato(Contrato contrato) {
+
+        // Si el contrato no tiene fecha fin, de momento no generamos nada
+        if (contrato.getFechaFin() == null) {
+            return;
+        }
+
+        BigDecimal montoMensual = contrato.getHabitacion().getPrecioRenta();
+
+        LocalDate inicio = contrato.getFechaInicio();
+        LocalDate fin = contrato.getFechaFin();
+
+        YearMonth mesActual = YearMonth.from(inicio);
+        YearMonth mesFin = YearMonth.from(fin);
+
+        while (!mesActual.isAfter(mesFin)) {
+
+            LocalDate periodoInicio = mesActual.atDay(1);
+            LocalDate periodoFin = mesActual.atEndOfMonth();
+
+            // Ajuste por si el contrato inicia a mitad de mes
+            if (periodoInicio.isBefore(inicio)) {
+                periodoInicio = inicio;
+            }
+            if (periodoFin.isAfter(fin)) {
+                periodoFin = fin;
+            }
+
+            // Vencimiento: día 5 del mes (puedes cambiar la lógica si quieres)
+            LocalDate fechaVencimiento = mesActual.atDay(5);
+
+            Factura factura = Factura.builder()
+                    .contrato(contrato)
+                    .periodoInicio(periodoInicio)
+                    .periodoFin(periodoFin)
+                    .fechaVencimiento(fechaVencimiento)
+                    .montoRenta(montoMensual)
+                    .totalAPagar(montoMensual)
+                    .estado(Factura.EstadoFactura.ABIERTA)
+                    .build();
+
+            facturaRepository.save(factura);
+
+            mesActual = mesActual.plusMonths(1);
+        }
+    }
+
+    /* ===================== listar facturas ===================== */
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FacturaResponseDto> listarPorPropiedad(Long propiedadId, Factura.EstadoFactura estado) {
+
+        validarPropiedadDelUsuario(propiedadId);
+
+        List<Factura> facturas;
+
+        if (estado != null) {
+            facturas = facturaRepository.findByContratoPropiedadIdAndEstado(propiedadId, estado);
+        } else {
+            facturas = facturaRepository.findByContratoPropiedadId(propiedadId);
+        }
+
+        // Actualizar estado a VENCIDA si corresponde (simple)
+        LocalDate hoy = LocalDate.now();
+        facturas.forEach(f -> {
+            if (f.getEstado() == Factura.EstadoFactura.ABIERTA &&
+                    f.getFechaVencimiento().isBefore(hoy)) {
+                f.setEstado(Factura.EstadoFactura.VENCIDA);
+            }
+        });
+
+        // se persisten los cambios de estado automáticamente por @Transactional
+
+        return facturas.stream()
+                .map(facturaMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FacturaResponseDto> listarPorContrato(Long propiedadId, Long contratoId) {
+
+        validarPropiedadDelUsuario(propiedadId);
+
+        List<Factura> facturas = facturaRepository.findByContratoId(contratoId);
+
+        return facturas.stream()
+                .filter(f -> f.getContrato().getPropiedad().getId().equals(propiedadId))
+                .map(facturaMapper::toResponse)
+                .toList();
+    }
+}

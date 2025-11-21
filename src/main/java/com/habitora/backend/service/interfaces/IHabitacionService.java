@@ -11,26 +11,27 @@ import java.util.List;
 
 public interface IHabitacionService {
 
-    List<HabitacionResponseDto> createAutomatic(HabitacionCreateRequestDto dto);
+        List<HabitacionResponseDto> createAutomatic(HabitacionCreateRequestDto dto);
 
-    List<HabitacionResponseDto> getByPiso(Long pisoId);
+        List<HabitacionResponseDto> getByPiso(Long pisoId);
 
-    List<PisoHabitacionesResponseDto> getByPropiedadGroupedByPiso(
-            Long propiedadId,
-            Habitacion.EstadoHabitacion estadoFilter,
-            String searchCodigo);
+    public List<PisoHabitacionesResponseDto> getByPropiedadGroupedByPiso(
+        Long propiedadId,
+        Habitacion.EstadoHabitacion estadoFilter,
+        String searchCodigo,
+        Boolean requierePrecio);
 
-    HabitacionResponseDto createManual(
-            Long propiedadId,
-            HabitacionManualCreateRequestDto request);
+        HabitacionResponseDto createManual(
+                        Long propiedadId,
+                        HabitacionManualCreateRequestDto request);
 
-    HabitacionResponseDto update(
-            Long propiedadId,
-            Long habitacionId,
-            HabitacionUpdateRequestDto request);
+        HabitacionResponseDto update(
+                        Long propiedadId,
+                        Long habitacionId,
+                        HabitacionUpdateRequestDto request);
 
-    void delete(
-            Long propiedadId,
-            Long habitacionId);
+        void delete(
+                        Long propiedadId,
+                        Long habitacionId);
 
 }

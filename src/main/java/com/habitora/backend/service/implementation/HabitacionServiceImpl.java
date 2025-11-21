@@ -33,9 +33,11 @@ public class HabitacionServiceImpl implements IHabitacionService {
     private final HabitacionRepository habitacionRepository;
     private final HabitacionMapper habitacionMapper;
 
-    /* =======================================================
-       Helpers de seguridad
-       ======================================================= */
+    /*
+     * =======================================================
+     * Helpers de seguridad
+     * =======================================================
+     */
 
     private Usuario getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -58,9 +60,11 @@ public class HabitacionServiceImpl implements IHabitacionService {
         return propiedad;
     }
 
-    /* =======================================================
-       CREACIÓN AUTOMÁTICA
-       ======================================================= */
+    /*
+     * =======================================================
+     * CREACIÓN AUTOMÁTICA
+     * =======================================================
+     */
 
     @Override
     @Transactional
@@ -105,9 +109,11 @@ public class HabitacionServiceImpl implements IHabitacionService {
         return result;
     }
 
-    /* =======================================================
-       GET POR PISO (ya existente, sin propiedadId en la URL)
-       ======================================================= */
+    /*
+     * =======================================================
+     * GET POR PISO (ya existente, sin propiedadId en la URL)
+     * =======================================================
+     */
 
     @Override
     @Transactional(readOnly = true)
@@ -118,23 +124,25 @@ public class HabitacionServiceImpl implements IHabitacionService {
                 .toList();
     }
 
-    /* =======================================================
-       AGRUPAR POR PISO + FILTROS (endpoint principal)
-       ======================================================= */
+    /*
+     * =======================================================
+     * AGRUPAR POR PISO + FILTROS (endpoint principal)
+     * =======================================================
+     */
 
     @Override
     @Transactional(readOnly = true)
     public List<PisoHabitacionesResponseDto> getByPropiedadGroupedByPiso(
             Long propiedadId,
             Habitacion.EstadoHabitacion estadoFilter,
-            String searchCodigo) {
+            String searchCodigo,
+            Boolean requierePrecio) {
 
         // Valida que la propiedad es del usuario
         validarPropiedadDelUsuario(propiedadId);
 
         // Carga todas las habitaciones de la propiedad
-        List<Habitacion> habitaciones =
-                habitacionRepository.findByPropiedadIdOrderByPisoNumeroPisoAsc(propiedadId);
+        List<Habitacion> habitaciones = habitacionRepository.findByPropiedadIdOrderByPisoNumeroPisoAsc(propiedadId);
 
         // 🔍 Filtro: estado
         if (estadoFilter != null) {
@@ -149,6 +157,22 @@ public class HabitacionServiceImpl implements IHabitacionService {
             habitaciones = habitaciones.stream()
                     .filter(h -> h.getCodigo().toLowerCase().startsWith(prefix))
                     .collect(Collectors.toList());
+        }
+        // 🔍 Filtro: precio requerido
+        if (requierePrecio != null) {
+            if (requierePrecio) {
+                // SOLO habitaciones con precio > 0
+                habitaciones = habitaciones.stream()
+                        .filter(h -> h.getPrecioRenta() != null &&
+                                h.getPrecioRenta().compareTo(BigDecimal.ZERO) > 0)
+                        .collect(Collectors.toList());
+            } else {
+                // SOLO habitaciones con precio == 0
+                habitaciones = habitaciones.stream()
+                        .filter(h -> h.getPrecioRenta() != null &&
+                                h.getPrecioRenta().compareTo(BigDecimal.ZERO) == 0)
+                        .collect(Collectors.toList());
+            }
         }
 
         // Agrupar por piso
@@ -166,8 +190,7 @@ public class HabitacionServiceImpl implements IHabitacionService {
             dto.setHabitaciones(
                     entry.getValue().stream()
                             .map(habitacionMapper::toResponse)
-                            .collect(Collectors.toList())
-            );
+                            .collect(Collectors.toList()));
 
             result.add(dto);
         }
@@ -178,9 +201,11 @@ public class HabitacionServiceImpl implements IHabitacionService {
         return result;
     }
 
-    /* =======================================================
-       CREACIÓN MANUAL
-       ======================================================= */
+    /*
+     * =======================================================
+     * CREACIÓN MANUAL
+     * =======================================================
+     */
 
     @Override
     @Transactional
@@ -207,9 +232,11 @@ public class HabitacionServiceImpl implements IHabitacionService {
         return habitacionMapper.toResponse(saved);
     }
 
-    /* =======================================================
-       UPDATE
-       ======================================================= */
+    /*
+     * =======================================================
+     * UPDATE
+     * =======================================================
+     */
 
     @Override
     @Transactional
@@ -238,9 +265,11 @@ public class HabitacionServiceImpl implements IHabitacionService {
         return habitacionMapper.toResponse(updated);
     }
 
-    /* =======================================================
-       DELETE
-       ======================================================= */
+    /*
+     * =======================================================
+     * DELETE
+     * =======================================================
+     */
 
     @Override
     @Transactional

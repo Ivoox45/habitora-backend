@@ -22,87 +22,84 @@ import java.util.List;
 @Tag(name = "Habitaciones", description = "Gestión de habitaciones dentro de una propiedad")
 public class HabitacionController {
 
-    private final IHabitacionService habitacionService;
+        private final IHabitacionService habitacionService;
 
-    // =====================================================
-    // ENDPOINTS "LEGACY" / GENERALES (por piso)
-    // =====================================================
+        // =====================================================
+        // ENDPOINTS "LEGACY" / GENERALES (por piso)
+        // =====================================================
 
-    @PostMapping("/habitaciones/crear-automatico")
-    @Operation(
-            summary = "Crear habitaciones automáticas",
-            description = "Genera códigos como 101, 102, 201, 202 según el piso."
-    )
-    public List<HabitacionResponseDto> crearAutomatico(
-            @RequestBody HabitacionCreateRequestDto dto) {
-        return habitacionService.createAutomatic(dto);
-    }
+        @PostMapping("/habitaciones/crear-automatico")
+        @Operation(summary = "Crear habitaciones automáticas", description = "Genera códigos como 101, 102, 201, 202 según el piso.")
+        public List<HabitacionResponseDto> crearAutomatico(
+                        @RequestBody HabitacionCreateRequestDto dto) {
+                return habitacionService.createAutomatic(dto);
+        }
 
-    @GetMapping("/habitaciones/piso/{pisoId}")
-    @Operation(summary = "Listar habitaciones por piso")
-    public List<HabitacionResponseDto> listarPorPiso(@PathVariable Long pisoId) {
-        return habitacionService.getByPiso(pisoId);
-    }
+        @GetMapping("/habitaciones/piso/{pisoId}")
+        @Operation(summary = "Listar habitaciones por piso")
+        public List<HabitacionResponseDto> listarPorPiso(@PathVariable Long pisoId) {
+                return habitacionService.getByPiso(pisoId);
+        }
 
-    // =====================================================
-    // ENDPOINTS PRINCIPALES POR PROPIEDAD
-    // =====================================================
+        // =====================================================
+        // ENDPOINTS PRINCIPALES POR PROPIEDAD
+        // =====================================================
 
-    @GetMapping("/propiedades/{propiedadId}/habitaciones")
-    @Operation(
-            summary = "Listar habitaciones agrupadas por pisos",
-            description = """
-                    Devuelve todas las habitaciones de una propiedad,
-                    agrupadas por piso.
+        @GetMapping("/propiedades/{propiedadId}/habitaciones")
+        @Operation(summary = "Listar habitaciones agrupadas por pisos", description = """
+                        Devuelve todas las habitaciones de una propiedad,
+                        agrupadas por piso.
 
-                    Filtros opcionales:
-                    - estado: DISPONIBLE u OCUPADA
-                    - search: código de habitación (empieza con ...)
-                    """
-    )
-    public ResponseEntity<List<PisoHabitacionesResponseDto>> listarHabitaciones(
-            @PathVariable Long propiedadId,
-            @RequestParam(required = false) Habitacion.EstadoHabitacion estado,
-            @RequestParam(required = false) String search) {
+                        Filtros opcionales:
+                        - estado: DISPONIBLE u OCUPADA
+                        - search: código de habitación (empieza con ...)
+                        - requierePrecio: true=solo con precio, false=solo sin precio
+                        """)
+        public ResponseEntity<List<PisoHabitacionesResponseDto>> listarHabitaciones(
+                        @PathVariable Long propiedadId,
+                        @RequestParam(required = false) Habitacion.EstadoHabitacion estado,
+                        @RequestParam(required = false) String search,
+                        @RequestParam(required = false) Boolean requierePrecio) {
 
-        List<PisoHabitacionesResponseDto> response =
-                habitacionService.getByPropiedadGroupedByPiso(propiedadId, estado, search);
+                List<PisoHabitacionesResponseDto> response = habitacionService.getByPropiedadGroupedByPiso(
+                                propiedadId,
+                                estado,
+                                search,
+                                requierePrecio);
 
-        return ResponseEntity.ok(response);
-    }
+                return ResponseEntity.ok(response);
+        }
 
-    @PostMapping("/propiedades/{propiedadId}/habitaciones/manual")
-    @Operation(summary = "Crear una habitación manualmente")
-    public ResponseEntity<HabitacionResponseDto> crearManual(
-            @PathVariable Long propiedadId,
-            @Valid @RequestBody HabitacionManualCreateRequestDto dto) {
+        @PostMapping("/propiedades/{propiedadId}/habitaciones/manual")
+        @Operation(summary = "Crear una habitación manualmente")
+        public ResponseEntity<HabitacionResponseDto> crearManual(
+                        @PathVariable Long propiedadId,
+                        @Valid @RequestBody HabitacionManualCreateRequestDto dto) {
 
-        HabitacionResponseDto response =
-                habitacionService.createManual(propiedadId, dto);
+                HabitacionResponseDto response = habitacionService.createManual(propiedadId, dto);
 
-        return ResponseEntity.ok(response);
-    }
+                return ResponseEntity.ok(response);
+        }
 
-    @PutMapping("/propiedades/{propiedadId}/habitaciones/{habitacionId}")
-    @Operation(summary = "Actualizar habitación")
-    public ResponseEntity<HabitacionResponseDto> actualizar(
-            @PathVariable Long propiedadId,
-            @PathVariable Long habitacionId,
-            @Valid @RequestBody HabitacionUpdateRequestDto dto) {
+        @PutMapping("/propiedades/{propiedadId}/habitaciones/{habitacionId}")
+        @Operation(summary = "Actualizar habitación")
+        public ResponseEntity<HabitacionResponseDto> actualizar(
+                        @PathVariable Long propiedadId,
+                        @PathVariable Long habitacionId,
+                        @Valid @RequestBody HabitacionUpdateRequestDto dto) {
 
-        HabitacionResponseDto updated =
-                habitacionService.update(propiedadId, habitacionId, dto);
+                HabitacionResponseDto updated = habitacionService.update(propiedadId, habitacionId, dto);
 
-        return ResponseEntity.ok(updated);
-    }
+                return ResponseEntity.ok(updated);
+        }
 
-    @DeleteMapping("/propiedades/{propiedadId}/habitaciones/{habitacionId}")
-    @Operation(summary = "Eliminar habitación")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable Long propiedadId,
-            @PathVariable Long habitacionId) {
+        @DeleteMapping("/propiedades/{propiedadId}/habitaciones/{habitacionId}")
+        @Operation(summary = "Eliminar habitación")
+        public ResponseEntity<Void> eliminar(
+                        @PathVariable Long propiedadId,
+                        @PathVariable Long habitacionId) {
 
-        habitacionService.delete(propiedadId, habitacionId);
-        return ResponseEntity.noContent().build();
-    }
+                habitacionService.delete(propiedadId, habitacionId);
+                return ResponseEntity.noContent().build();
+        }
 }
