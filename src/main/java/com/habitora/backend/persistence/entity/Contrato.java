@@ -25,42 +25,61 @@ public class Contrato {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", updatable = false, nullable = false)
     private Long id;
 
+    // ============================
+    // RELACIONES
+    // ============================
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "propiedad_id", nullable = false,
+    @JoinColumn(name = "propiedad_id",
             foreignKey = @ForeignKey(name = "fk_contrato_propiedad"))
     private Propiedad propiedad;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "habitacion_id", nullable = false,
+    @JoinColumn(name = "habitacion_id",
             foreignKey = @ForeignKey(name = "fk_contrato_habitacion"))
     private Habitacion habitacion;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "inquilino_id", nullable = false,
+    @JoinColumn(name = "inquilino_id",
             foreignKey = @ForeignKey(name = "fk_contrato_inquilino"))
     private Inquilino inquilino;
 
+    // ============================
+    // ESTADO & FECHAS
+    // ============================
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado", nullable = false, length = 20)
+    @Column(nullable = false, length = 20)
     private EstadoContrato estado;
 
-    @NotNull(message = "La fecha de inicio es obligatoria.")
-    @Column(name = "fecha_inicio", nullable = false)
+    @NotNull
+    @Column(nullable = false)
     private LocalDate fechaInicio;
 
-    @Column(name = "fecha_fin")
     private LocalDate fechaFin;
 
-    @NotNull(message = "El monto del depósito es obligatorio.")
-    @PositiveOrZero(message = "El monto del depósito no puede ser negativo.")
-    @Column(name = "monto_deposito", nullable = false, precision = 12, scale = 2)
+    // ============================
+    // MONTO
+    // ============================
+
+    @NotNull
+    @PositiveOrZero
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal montoDeposito;
 
-    @Column(name = "url_archivo_firmado", length = 300)
-    private String urlArchivoFirmado;
+    // ============================
+    // FIRMA DIGITAL (BLOB)
+    // ============================
+
+    @Lob
+    @Column(name = "firma_inquilino", columnDefinition = "LONGBLOB")
+    private byte[] firmaInquilino;
+
+    // ============================
+    // RELACIONES HIJAS
+    // ============================
 
     @Builder.Default
     @OneToMany(mappedBy = "contrato", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -74,20 +93,9 @@ public class Contrato {
     @OneToMany(mappedBy = "contrato", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Recordatorio> recordatorios = new ArrayList<>();
 
-    public void addFactura(Factura factura) {
-        facturas.add(factura);
-        factura.setContrato(this);
-    }
-
-    public void addPago(Pago pago) {
-        pagos.add(pago);
-        pago.setContrato(this);
-    }
-
-    public void addRecordatorio(Recordatorio recordatorio) {
-        recordatorios.add(recordatorio);
-        recordatorio.setContrato(this);
-    }
+    // ============================
+    // ENUM
+    // ============================
 
     public enum EstadoContrato {
         ACTIVO,
