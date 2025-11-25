@@ -20,5 +20,4 @@ public interface IInquilinoService {
 
     void deleteById(Long propiedadId, Long id);
 
-    List<InquilinoListResponseDto> search(Long propiedadId, String query);
 }

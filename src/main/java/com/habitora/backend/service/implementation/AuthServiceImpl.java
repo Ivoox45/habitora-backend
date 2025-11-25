@@ -5,16 +5,19 @@ import com.habitora.backend.persistence.entity.Usuario;
 import com.habitora.backend.persistence.repository.UsuarioRepository;
 import com.habitora.backend.presentation.dto.auth.request.LoginRequest;
 import com.habitora.backend.presentation.dto.auth.request.RegisterRequest;
+import com.habitora.backend.exception.BusinessException;
 import com.habitora.backend.service.interfaces.IAuthService;
 import com.habitora.backend.service.interfaces.IJwtService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements IAuthService {
 
     private final UsuarioRepository usuarioRepository;
@@ -28,9 +31,10 @@ public class AuthServiceImpl implements IAuthService {
 
     @Override
     public void register(RegisterRequest request, HttpServletResponse response) {
+        log.info("Registrando nuevo usuario: {}", request.getEmail());
 
         if (usuarioRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Ya existe un usuario con ese email.");
+            throw new BusinessException("Ya existe un usuario con ese email.");
         }
 
         Usuario usuario = Usuario.builder()
@@ -41,21 +45,24 @@ public class AuthServiceImpl implements IAuthService {
                 .build();
 
         usuarioRepository.save(usuario);
+        log.info("Usuario registrado exitosamente: {}", usuario.getEmail());
 
         performLogin(usuario, response);
     }
 
     @Override
     public void login(LoginRequest request, HttpServletResponse response) {
+        log.info("Intento de login para: {}", request.getEmail());
 
         Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Email o contraseña incorrectos."));
+                .orElseThrow(() -> new BusinessException("Email o contraseña incorrectos."));
 
         if (!passwordEncoder.matches(request.getPassword(), usuario.getContrasena())) {
-            throw new IllegalArgumentException("Email o contraseña incorrectos.");
+            throw new BusinessException("Email o contraseña incorrectos.");
         }
 
         performLogin(usuario, response);
+        log.info("Login exitoso para: {}", usuario.getEmail());
     }
 
     private void performLogin(Usuario usuario, HttpServletResponse response) {

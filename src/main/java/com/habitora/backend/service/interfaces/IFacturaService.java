@@ -15,12 +15,7 @@ public interface IFacturaService {
     void generarFacturasParaContrato(Contrato contrato);
 
     /**
-     * Lista facturas de una propiedad, con filtro opcional por estado.
+     * Lista facturas con filtros opcionales.
      */
-    List<FacturaResponseDto> listarPorPropiedad(Long propiedadId, Factura.EstadoFactura estado);
-
-    /**
-     * Lista facturas de un contrato específico dentro de una propiedad.
-     */
-    List<FacturaResponseDto> listarPorContrato(Long propiedadId, Long contratoId);
+    List<FacturaResponseDto> listar(Long propiedadId, Long contratoId, Factura.EstadoFactura estado);
 }

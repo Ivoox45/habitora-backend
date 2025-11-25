@@ -31,9 +31,11 @@ public class InquilinoServiceImpl implements IInquilinoService {
     private final PropiedadRepository propiedadRepository;
     private final InquilinoMapper mapper;
 
-    /* =======================================================
-       Helpers de seguridad
-       ======================================================= */
+    /*
+     * =======================================================
+     * Helpers de seguridad
+     * =======================================================
+     */
 
     private Usuario getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -56,9 +58,11 @@ public class InquilinoServiceImpl implements IInquilinoService {
         return propiedad;
     }
 
-    /* =======================================================
-       CREATE
-       ======================================================= */
+    /*
+     * =======================================================
+     * CREATE
+     * =======================================================
+     */
 
     @Override
     public InquilinoResponseDto create(Long propiedadId, InquilinoCreateRequestDto request) {
@@ -77,9 +81,11 @@ public class InquilinoServiceImpl implements IInquilinoService {
         return mapper.toResponse(entity);
     }
 
-    /* =======================================================
-       FIND ALL + FILTROS
-       ======================================================= */
+    /*
+     * =======================================================
+     * FIND ALL + FILTROS
+     * =======================================================
+     */
 
     @Override
     public List<InquilinoListResponseDto> findAll(Long propiedadId, Boolean disponibles, String query) {
@@ -100,9 +106,11 @@ public class InquilinoServiceImpl implements IInquilinoService {
         return mapper.toListResponse(inquilinoRepository.findAllByPropiedad(propiedadId));
     }
 
-    /* =======================================================
-       FIND BY ID
-       ======================================================= */
+    /*
+     * =======================================================
+     * FIND BY ID
+     * =======================================================
+     */
 
     @Override
     @Transactional(readOnly = true)
@@ -115,9 +123,11 @@ public class InquilinoServiceImpl implements IInquilinoService {
                 .map(mapper::toResponse);
     }
 
-    /* =======================================================
-       UPDATE
-       ======================================================= */
+    /*
+     * =======================================================
+     * UPDATE
+     * =======================================================
+     */
 
     @Override
     public InquilinoResponseDto update(Long propiedadId, Long id, InquilinoUpdateRequestDto request) {
@@ -141,9 +151,11 @@ public class InquilinoServiceImpl implements IInquilinoService {
         return mapper.toResponse(entity);
     }
 
-    /* =======================================================
-       DELETE
-       ======================================================= */
+    /*
+     * =======================================================
+     * DELETE
+     * =======================================================
+     */
 
     @Override
     public void deleteById(Long propiedadId, Long id) {
@@ -157,20 +169,4 @@ public class InquilinoServiceImpl implements IInquilinoService {
         inquilinoRepository.delete(entity);
     }
 
-    /* =======================================================
-       SEARCH DIRECTO
-       ======================================================= */
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<InquilinoListResponseDto> search(Long propiedadId, String query) {
-
-        validarPropiedad(propiedadId);
-
-        if (query == null || query.isBlank()) {
-            return findAll(propiedadId, null, null); // llamada limpia
-        }
-
-        return mapper.toListResponse(inquilinoRepository.search(propiedadId, query));
-    }
 }

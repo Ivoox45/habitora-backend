@@ -130,33 +130,36 @@ public class FacturaServiceImpl implements IFacturaService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FacturaResponseDto> listarPorPropiedad(Long propiedadId, Factura.EstadoFactura estado) {
+    public List<FacturaResponseDto> listar(Long propiedadId, Long contratoId, Factura.EstadoFactura estado) {
 
         validarPropiedadDelUsuario(propiedadId);
 
         List<Factura> facturas;
 
-        if (estado != null) {
+        if (contratoId != null) {
+            // Filtrar por contrato
+            facturas = facturaRepository.findByContratoId(contratoId);
+            // Asegurar que el contrato pertenece a la propiedad
+            facturas = facturas.stream()
+                    .filter(f -> f.getContrato().getPropiedad().getId().equals(propiedadId))
+                    .toList();
+        } else if (estado != null) {
+            // Filtrar por estado
             facturas = facturaRepository.findByContratoPropiedadIdAndEstado(propiedadId, estado);
         } else {
+            // Todas las de la propiedad
             facturas = facturaRepository.findByContratoPropiedadId(propiedadId);
         }
 
-        return facturas.stream()
-                .map(this::buildDtoConFlags)
-                .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<FacturaResponseDto> listarPorContrato(Long propiedadId, Long contratoId) {
-
-        validarPropiedadDelUsuario(propiedadId);
-
-        List<Factura> facturas = facturaRepository.findByContratoId(contratoId);
+        // Si se pide filtrar por estado Y contrato a la vez (aunque el repo de arriba
+        // solo filtraba por contrato)
+        if (contratoId != null && estado != null) {
+            facturas = facturas.stream()
+                    .filter(f -> f.getEstado() == estado)
+                    .toList();
+        }
 
         return facturas.stream()
-                .filter(f -> f.getContrato().getPropiedad().getId().equals(propiedadId))
                 .map(this::buildDtoConFlags)
                 .toList();
     }

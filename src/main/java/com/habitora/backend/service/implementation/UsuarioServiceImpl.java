@@ -10,33 +10,42 @@ import com.habitora.backend.presentation.dto.usuario.response.UsuarioListRespons
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioPropiedadesDto;
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioResponseDto;
 import com.habitora.backend.service.interfaces.IUsuarioService;
+import com.habitora.backend.exception.ResourceNotFoundException;
 import com.habitora.backend.util.mapper.UsuarioMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class UsuarioServiceImpl implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final UsuarioMapper usuarioMapper;
     private final PropiedadRepository propiedadRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UsuarioServiceImpl(UsuarioRepository usuarioRepository, UsuarioMapper usuarioMapper,
-            PropiedadRepository propiedadRepository) {
+            PropiedadRepository propiedadRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.usuarioMapper = usuarioMapper;
         this.propiedadRepository = propiedadRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     @Transactional
     public UsuarioResponseDto create(UsuarioCreateRequestDto createDto) {
+        log.info("Creando nuevo usuario con email: {}", createDto.getEmail());
         Usuario entidad = usuarioMapper.toEntity(createDto);
+        entidad.setContrasena(passwordEncoder.encode(entidad.getContrasena()));
         Usuario saved = usuarioRepository.save(entidad);
+        log.info("Usuario creado con ID: {}", saved.getId());
         return usuarioMapper.toResponse(saved);
     }
 
@@ -58,6 +67,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Override
     @Transactional
     public UsuarioResponseDto update(Long id, UsuarioUpdateRequestDto updateDto) {
+        log.info("Actualizando usuario con ID: {}", id);
         return usuarioRepository.findById(id).map(existing -> {
             if (updateDto.getNombreCompleto() != null)
                 existing.setNombreCompleto(updateDto.getNombreCompleto());
@@ -66,15 +76,16 @@ public class UsuarioServiceImpl implements IUsuarioService {
             if (updateDto.getTelefonoWhatsapp() != null)
                 existing.setTelefonoWhatsapp(updateDto.getTelefonoWhatsapp());
             if (updateDto.getContrasena() != null)
-                existing.setContrasena(updateDto.getContrasena());
+                existing.setContrasena(passwordEncoder.encode(updateDto.getContrasena()));
             Usuario saved = usuarioRepository.save(existing);
             return usuarioMapper.toResponse(saved);
-        }).orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con id: " + id));
+        }).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
     }
 
     @Override
     @Transactional
     public void deleteById(Long id) {
+        log.info("Eliminando usuario con ID: {}", id);
         usuarioRepository.deleteById(id);
     }
 
@@ -92,7 +103,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
     public UsuarioPropiedadesDto getUserSimpleProperties(Long usuarioId) {
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         List<PropiedadSimpleDto> propiedades = propiedadRepository.findByUsuarioId(usuarioId)
                 .stream()

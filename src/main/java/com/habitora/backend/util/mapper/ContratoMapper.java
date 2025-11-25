@@ -54,7 +54,7 @@ public class ContratoMapper {
         dto.setHabitacionEstado(hab.getEstado().name());
         dto.setHabitacionPrecioRenta(hab.getPrecioRenta().toPlainString());
 
-        dto.setTieneFirma(contrato.getFirmaInquilino() != null);
+        dto.setTieneFirma(contrato.getFirmaPath() != null);
 
         return dto;
     }

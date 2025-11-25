@@ -5,13 +5,16 @@ import com.habitora.backend.persistence.repository.*;
 import com.habitora.backend.presentation.dto.contrato.request.ContratoCreateRequestDto;
 import com.habitora.backend.presentation.dto.contrato.response.ContratoDetailResponseDto;
 import com.habitora.backend.presentation.dto.contrato.response.ContratoListResponseDto;
+import com.habitora.backend.service.interfaces.IFileStorageService;
 import com.habitora.backend.service.interfaces.IContratoService;
 import com.habitora.backend.service.interfaces.IFacturaService;
+import com.habitora.backend.exception.BusinessException;
+import com.habitora.backend.exception.ResourceNotFoundException;
 import com.habitora.backend.util.mapper.ContratoMapper;
+import com.habitora.backend.util.security.SecurityHelper;
+import lombok.extern.slf4j.Slf4j;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +26,7 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class ContratoServiceImpl implements IContratoService {
 
     private final ContratoRepository contratoRepository;
@@ -30,58 +34,40 @@ public class ContratoServiceImpl implements IContratoService {
     private final HabitacionRepository habitacionRepository;
     private final InquilinoRepository inquilinoRepository;
     private final IFacturaService facturaService;
+    private final IFileStorageService fileStorageService;
     private final ContratoMapper mapper;
+    private final SecurityHelper securityHelper;
 
-    /* =======================================================
-       Helpers de seguridad
-       ======================================================= */
-
-    private Usuario getCurrentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof Usuario usuario)) {
-            throw new IllegalStateException("No hay usuario autenticado.");
-        }
-        return usuario;
-    }
-
-    private Propiedad validarPropiedadDelUsuario(Long propiedadId) {
-        Usuario actual = getCurrentUser();
-
-        Propiedad propiedad = propiedadRepository.findById(propiedadId)
-                .orElseThrow(() -> new IllegalArgumentException("Propiedad no encontrada."));
-
-        if (!Objects.equals(propiedad.getUsuario().getId(), actual.getId())) {
-            throw new IllegalArgumentException("No tienes acceso a esta propiedad.");
-        }
-
-        return propiedad;
-    }
-
-    /* =======================================================
-       CREATE CONTRATO
-       ======================================================= */
+    /*
+     * =======================================================
+     * CREATE CONTRATO
+     * =======================================================
+     */
     @Override
     public ContratoDetailResponseDto create(Long propiedadId, ContratoCreateRequestDto request) {
+        log.info("Creando contrato para propiedad ID: {} e inquilino ID: {}", propiedadId, request.getInquilinoId());
 
-        Propiedad propiedad = validarPropiedadDelUsuario(propiedadId);
+        Propiedad propiedad = propiedadRepository.findById(propiedadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Propiedad no encontrada."));
+        securityHelper.validateOwner(propiedad);
 
         Inquilino inquilino = inquilinoRepository.findById(request.getInquilinoId())
-                .orElseThrow(() -> new IllegalArgumentException("Inquilino no encontrado."));
+                .orElseThrow(() -> new ResourceNotFoundException("Inquilino no encontrado."));
 
         if (!Objects.equals(inquilino.getPropiedad().getId(), propiedadId)) {
-            throw new IllegalArgumentException("Ese inquilino no pertenece a esta propiedad.");
+            throw new BusinessException("Ese inquilino no pertenece a esta propiedad.");
         }
 
         Habitacion habitacion = habitacionRepository.findById(request.getHabitacionId())
-                .orElseThrow(() -> new IllegalArgumentException("Habitación no encontrada."));
+                .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada."));
 
         if (!Objects.equals(habitacion.getPropiedad().getId(), propiedadId)) {
-            throw new IllegalArgumentException("Esa habitación no pertenece a esta propiedad.");
+            throw new BusinessException("Esa habitación no pertenece a esta propiedad.");
         }
 
         // validar habitación sin contrato activo
         if (contratoRepository.existsActivoInHabitacion(habitacion.getId())) {
-            throw new IllegalArgumentException("La habitación ya tiene un contrato activo.");
+            throw new BusinessException("La habitación ya tiene un contrato activo.");
         }
 
         // Crear contrato
@@ -93,7 +79,7 @@ public class ContratoServiceImpl implements IContratoService {
                 .fechaInicio(request.getFechaInicio())
                 .fechaFin(request.getFechaFin())
                 .montoDeposito(request.getMontoDeposito())
-                .firmaInquilino(null)
+                .firmaPath(null)
                 .build();
 
         contratoRepository.save(contrato);
@@ -105,17 +91,22 @@ public class ContratoServiceImpl implements IContratoService {
         // ⚡ Generar facturas mensuales automáticamente
         facturaService.generarFacturasParaContrato(contrato);
 
+        log.info("Contrato creado exitosamente con ID: {}", contrato.getId());
         return mapper.toDetailDto(contrato);
     }
 
-    /* =======================================================
-       LISTAR CONTRATOS
-       ======================================================= */
+    /*
+     * =======================================================
+     * LISTAR CONTRATOS
+     * =======================================================
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ContratoListResponseDto> list(Long propiedadId, Contrato.EstadoContrato estado, String search) {
 
-        validarPropiedadDelUsuario(propiedadId);
+        Propiedad propiedad = propiedadRepository.findById(propiedadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Propiedad no encontrada."));
+        securityHelper.validateOwner(propiedad);
 
         List<Contrato> data = contratoRepository.searchContratos(propiedadId, estado, search);
 
@@ -124,38 +115,47 @@ public class ContratoServiceImpl implements IContratoService {
                 .toList();
     }
 
-    /* =======================================================
-       DETALLE DE CONTRATO
-       ======================================================= */
+    /*
+     * =======================================================
+     * DETALLE DE CONTRATO
+     * =======================================================
+     */
     @Override
     @Transactional(readOnly = true)
     public ContratoDetailResponseDto getById(Long propiedadId, Long contratoId) {
 
-        validarPropiedadDelUsuario(propiedadId);
+        Propiedad propiedad = propiedadRepository.findById(propiedadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Propiedad no encontrada."));
+        securityHelper.validateOwner(propiedad);
 
         Contrato contrato = contratoRepository.findById(contratoId)
-                .orElseThrow(() -> new IllegalArgumentException("Contrato no encontrado."));
+                .orElseThrow(() -> new ResourceNotFoundException("Contrato no encontrado."));
 
         if (!Objects.equals(contrato.getPropiedad().getId(), propiedadId)) {
-            throw new IllegalArgumentException("Este contrato no pertenece a esta propiedad.");
+            throw new BusinessException("Este contrato no pertenece a esta propiedad.");
         }
 
         return mapper.toDetailDto(contrato);
     }
 
-    /* =======================================================
-       FINALIZAR CONTRATO
-       ======================================================= */
+    /*
+     * =======================================================
+     * FINALIZAR CONTRATO
+     * =======================================================
+     */
     @Override
     public ContratoDetailResponseDto finalizar(Long propiedadId, Long contratoId) {
+        log.info("Finalizando contrato ID: {} de propiedad ID: {}", contratoId, propiedadId);
 
-        validarPropiedadDelUsuario(propiedadId);
+        Propiedad propiedad = propiedadRepository.findById(propiedadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Propiedad no encontrada."));
+        securityHelper.validateOwner(propiedad);
 
         Contrato contrato = contratoRepository.findById(contratoId)
-                .orElseThrow(() -> new IllegalArgumentException("Contrato no encontrado."));
+                .orElseThrow(() -> new ResourceNotFoundException("Contrato no encontrado."));
 
         if (!Objects.equals(contrato.getPropiedad().getId(), propiedadId)) {
-            throw new IllegalArgumentException("Este contrato no pertenece a esta propiedad.");
+            throw new BusinessException("Este contrato no pertenece a esta propiedad.");
         }
 
         contrato.setEstado(Contrato.EstadoContrato.CANCELADO);
@@ -169,52 +169,66 @@ public class ContratoServiceImpl implements IContratoService {
         return mapper.toDetailDto(contrato);
     }
 
-    /* =======================================================
-       SUBIR FIRMA DIGITAL
-       ======================================================= */
+    /*
+     * =======================================================
+     * SUBIR FIRMA DIGITAL
+     * =======================================================
+     */
     @Override
     public ContratoDetailResponseDto uploadFirma(Long propiedadId, Long contratoId, MultipartFile file)
             throws IOException {
+        log.info("Subiendo firma para contrato ID: {}", contratoId);
 
-        validarPropiedadDelUsuario(propiedadId);
+        Propiedad propiedad = propiedadRepository.findById(propiedadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Propiedad no encontrada."));
+        securityHelper.validateOwner(propiedad);
 
         Contrato contrato = contratoRepository.findById(contratoId)
-                .orElseThrow(() -> new IllegalArgumentException("Contrato no encontrado."));
+                .orElseThrow(() -> new ResourceNotFoundException("Contrato no encontrado."));
 
         if (!Objects.equals(contrato.getPropiedad().getId(), propiedadId)) {
-            throw new IllegalArgumentException("Este contrato no pertenece a esta propiedad.");
+            throw new BusinessException("Este contrato no pertenece a esta propiedad.");
         }
 
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("El archivo de firma está vacío.");
+            throw new BusinessException("El archivo de firma está vacío.");
         }
 
-        contrato.setFirmaInquilino(file.getBytes());
+        String path = fileStorageService.saveFile(file, "firmas");
+        contrato.setFirmaPath(path);
         contratoRepository.save(contrato);
 
         return mapper.toDetailDto(contrato);
     }
 
-    /* =======================================================
-       OBTENER FIRMA DIGITAL
-       ======================================================= */
+    /*
+     * =======================================================
+     * OBTENER FIRMA DIGITAL
+     * =======================================================
+     */
     @Override
     @Transactional(readOnly = true)
     public byte[] getFirma(Long propiedadId, Long contratoId) {
 
-        validarPropiedadDelUsuario(propiedadId);
+        Propiedad propiedad = propiedadRepository.findById(propiedadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Propiedad no encontrada."));
+        securityHelper.validateOwner(propiedad);
 
         Contrato contrato = contratoRepository.findById(contratoId)
-                .orElseThrow(() -> new IllegalArgumentException("Contrato no encontrado."));
+                .orElseThrow(() -> new ResourceNotFoundException("Contrato no encontrado."));
 
         if (!Objects.equals(contrato.getPropiedad().getId(), propiedadId)) {
-            throw new IllegalArgumentException("Este contrato no pertenece a esta propiedad.");
+            throw new BusinessException("Este contrato no pertenece a esta propiedad.");
         }
 
-        if (contrato.getFirmaInquilino() == null) {
-            throw new IllegalArgumentException("Este contrato no tiene firma.");
+        if (contrato.getFirmaPath() == null) {
+            throw new BusinessException("Este contrato no tiene firma.");
         }
 
-        return contrato.getFirmaInquilino();
+        try {
+            return fileStorageService.loadFile(contrato.getFirmaPath());
+        } catch (IOException e) {
+            throw new RuntimeException("Error al leer el archivo de firma", e);
+        }
     }
 }

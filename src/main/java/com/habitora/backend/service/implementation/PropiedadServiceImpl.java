@@ -15,10 +15,8 @@ import com.habitora.backend.presentation.dto.propiedad.response.PropiedadRespons
 import com.habitora.backend.service.interfaces.IPropiedadService;
 import com.habitora.backend.util.mapper.PropiedadMapper;
 
+import com.habitora.backend.util.security.SecurityHelper;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,18 +32,15 @@ public class PropiedadServiceImpl implements IPropiedadService {
     private final PropiedadRepository propiedadRepository;
     private final PisoRepository pisoRepository;
     private final PropiedadMapper propiedadMapper;
+    private final SecurityHelper securityHelper;
 
     // ==========================
-    //   Helpers
+    // Helpers
     // ==========================
 
-    private Usuario getCurrentUsuario() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof Usuario usuario)) {
-            throw new IllegalStateException("No se encontró un usuario autenticado en el contexto.");
-        }
-        return usuario;
-    }
+    // ==========================
+    // Helpers
+    // ==========================
 
     private void validateBusinessRules(Propiedad propiedad) {
         Integer cantidadPisos = propiedad.getCantidadPisos();
@@ -59,13 +54,13 @@ public class PropiedadServiceImpl implements IPropiedadService {
     }
 
     // ==========================
-    //   Implementaciones
+    // Implementaciones
     // ==========================
 
     @Override
     @Transactional
     public PropiedadResponseDto createForCurrentUser(PropiedadCreateRequestDto dto) {
-        Usuario currentUser = getCurrentUsuario();
+        Usuario currentUser = securityHelper.getCurrentUser();
 
         // Convertir DTO → Entidad
         Propiedad propiedad = propiedadMapper.toEntity(dto);
@@ -100,7 +95,7 @@ public class PropiedadServiceImpl implements IPropiedadService {
     @Override
     @Transactional(readOnly = true)
     public List<PropiedadListResponseDto> findAllForCurrentUser() {
-        Usuario currentUser = getCurrentUsuario();
+        Usuario currentUser = securityHelper.getCurrentUser();
 
         return propiedadRepository.findByUsuarioId(currentUser.getId())
                 .stream()
@@ -111,7 +106,7 @@ public class PropiedadServiceImpl implements IPropiedadService {
     @Override
     @Transactional(readOnly = true)
     public Optional<PropiedadResponseDto> findByIdForCurrentUser(Long id) {
-        Usuario currentUser = getCurrentUsuario();
+        Usuario currentUser = securityHelper.getCurrentUser();
 
         return propiedadRepository.findByIdAndUsuarioId(id, currentUser.getId())
                 .map(propiedadMapper::toResponse);
@@ -120,14 +115,16 @@ public class PropiedadServiceImpl implements IPropiedadService {
     @Override
     @Transactional
     public PropiedadResponseDto updateForCurrentUser(Long id, PropiedadUpdateRequestDto dto) {
-        Usuario currentUser = getCurrentUsuario();
+        Usuario currentUser = securityHelper.getCurrentUser();
 
         Propiedad propiedad = propiedadRepository.findByIdAndUsuarioId(id, currentUser.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Propiedad no encontrada o no pertenece al usuario."));
 
         // Actualizar valores simples
-        if (dto.getNombre() != null) propiedad.setNombre(dto.getNombre());
-        if (dto.getDireccion() != null) propiedad.setDireccion(dto.getDireccion());
+        if (dto.getNombre() != null)
+            propiedad.setNombre(dto.getNombre());
+        if (dto.getDireccion() != null)
+            propiedad.setDireccion(dto.getDireccion());
 
         if (dto.getCantidadPisos() != null) {
             propiedad.setCantidadPisos(dto.getCantidadPisos());
@@ -147,7 +144,7 @@ public class PropiedadServiceImpl implements IPropiedadService {
     @Override
     @Transactional
     public void deleteForCurrentUser(Long id) {
-        Usuario currentUser = getCurrentUsuario();
+        Usuario currentUser = securityHelper.getCurrentUser();
 
         Propiedad propiedad = propiedadRepository.findByIdAndUsuarioId(id, currentUser.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Propiedad no encontrada o no pertenece al usuario."));

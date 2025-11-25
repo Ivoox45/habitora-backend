@@ -19,86 +19,82 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Accessors(chain = true)
-@ToString(exclude = {"facturas", "pagos", "recordatorios"})
-@EqualsAndHashCode(exclude = {"facturas", "pagos", "recordatorios"})
+@ToString(exclude = { "facturas", "pagos", "recordatorios" })
+@EqualsAndHashCode(exclude = { "facturas", "pagos", "recordatorios" })
 public class Contrato {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    // ============================
-    // RELACIONES
-    // ============================
+        // ============================
+        // RELACIONES
+        // ============================
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "propiedad_id",
-            foreignKey = @ForeignKey(name = "fk_contrato_propiedad"))
-    private Propiedad propiedad;
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
+        @JoinColumn(name = "propiedad_id", foreignKey = @ForeignKey(name = "fk_contrato_propiedad"))
+        private Propiedad propiedad;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "habitacion_id",
-            foreignKey = @ForeignKey(name = "fk_contrato_habitacion"))
-    private Habitacion habitacion;
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
+        @JoinColumn(name = "habitacion_id", foreignKey = @ForeignKey(name = "fk_contrato_habitacion"))
+        private Habitacion habitacion;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "inquilino_id",
-            foreignKey = @ForeignKey(name = "fk_contrato_inquilino"))
-    private Inquilino inquilino;
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
+        @JoinColumn(name = "inquilino_id", foreignKey = @ForeignKey(name = "fk_contrato_inquilino"))
+        private Inquilino inquilino;
 
-    // ============================
-    // ESTADO & FECHAS
-    // ============================
+        // ============================
+        // ESTADO & FECHAS
+        // ============================
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private EstadoContrato estado;
+        @Enumerated(EnumType.STRING)
+        @Column(nullable = false, length = 20)
+        private EstadoContrato estado;
 
-    @NotNull
-    @Column(nullable = false)
-    private LocalDate fechaInicio;
+        @NotNull
+        @Column(nullable = false)
+        private LocalDate fechaInicio;
 
-    private LocalDate fechaFin;
+        private LocalDate fechaFin;
 
-    // ============================
-    // MONTO
-    // ============================
+        // ============================
+        // MONTO
+        // ============================
 
-    @NotNull
-    @PositiveOrZero
-    @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal montoDeposito;
+        @NotNull
+        @PositiveOrZero
+        @Column(nullable = false, precision = 12, scale = 2)
+        private BigDecimal montoDeposito;
 
-    // ============================
-    // FIRMA DIGITAL (BLOB)
-    // ============================
+        // ============================
+        // FIRMA DIGITAL (PATH)
+        // ============================
 
-    @Lob
-    @Column(name = "firma_inquilino", columnDefinition = "LONGBLOB")
-    private byte[] firmaInquilino;
+        @Column(name = "firma_path", length = 500)
+        private String firmaPath;
 
-    // ============================
-    // RELACIONES HIJAS
-    // ============================
+        // ============================
+        // RELACIONES HIJAS
+        // ============================
 
-    @Builder.Default
-    @OneToMany(mappedBy = "contrato", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Factura> facturas = new ArrayList<>();
+        @Builder.Default
+        @OneToMany(mappedBy = "contrato", cascade = CascadeType.ALL, orphanRemoval = true)
+        private List<Factura> facturas = new ArrayList<>();
 
-    @Builder.Default
-    @OneToMany(mappedBy = "contrato", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Pago> pagos = new ArrayList<>();
+        @Builder.Default
+        @OneToMany(mappedBy = "contrato", cascade = CascadeType.ALL, orphanRemoval = true)
+        private List<Pago> pagos = new ArrayList<>();
 
-    @Builder.Default
-    @OneToMany(mappedBy = "contrato", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Recordatorio> recordatorios = new ArrayList<>();
+        @Builder.Default
+        @OneToMany(mappedBy = "contrato", cascade = CascadeType.ALL, orphanRemoval = true)
+        private List<Recordatorio> recordatorios = new ArrayList<>();
 
-    // ============================
-    // ENUM
-    // ============================
+        // ============================
+        // ENUM
+        // ============================
 
-    public enum EstadoContrato {
-        ACTIVO,
-        CANCELADO
-    }
+        public enum EstadoContrato {
+                ACTIVO,
+                CANCELADO
+        }
 }
