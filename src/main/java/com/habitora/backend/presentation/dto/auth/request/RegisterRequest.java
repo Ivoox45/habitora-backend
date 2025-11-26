@@ -1,11 +1,23 @@
 package com.habitora.backend.presentation.dto.auth.request;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 public class RegisterRequest {
+
+    @NotBlank(message = "El nombre completo es obligatorio")
     private String nombreCompleto;
+
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "Email inválido")
     private String email;
+
     private String telefonoWhatsapp;
+
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
     private String password;
 }

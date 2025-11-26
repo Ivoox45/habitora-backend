@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
@@ -26,7 +25,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/propiedades")
 @Tag(name = "Propiedades", description = "APIs para gestionar propiedades del usuario autenticado")
-@SecurityRequirement(name = "cookieAuth")
 @RequiredArgsConstructor
 public class PropiedadController {
 

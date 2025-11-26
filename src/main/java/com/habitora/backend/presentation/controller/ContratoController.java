@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +49,7 @@ public class ContratoController {
     )
     public ResponseEntity<ContratoDetailResponseDto> create(
             @PathVariable Long propiedadId,
-            @RequestBody ContratoCreateRequestDto request) {
+            @Valid @RequestBody ContratoCreateRequestDto request) {
 
         ContratoDetailResponseDto response = service.create(propiedadId, request);
 

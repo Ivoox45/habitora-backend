@@ -7,10 +7,12 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public interface IAuthService {
 
-    void register(RegisterRequest request, HttpServletResponse response);
+    String register(RegisterRequest request, HttpServletResponse response);
 
-    void login(LoginRequest request, HttpServletResponse response);
+    String login(LoginRequest request, HttpServletResponse response);
 
-    void logout(HttpServletResponse response);
+    void logout(jakarta.servlet.http.HttpServletRequest request, HttpServletResponse response);
+
+    String refresh(jakarta.servlet.http.HttpServletRequest request, HttpServletResponse response);
 
 }

@@ -6,7 +6,11 @@ import com.habitora.backend.presentation.dto.inquilino.request.InquilinoUpdateRe
 import com.habitora.backend.presentation.dto.inquilino.response.InquilinoListResponseDto;
 import com.habitora.backend.presentation.dto.inquilino.response.InquilinoResponseDto;
 
-import org.mapstruct.*;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
 
@@ -19,6 +23,7 @@ public interface InquilinoMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "contratos", ignore = true) // no viene del DTO
+    @Mapping(target = "propiedad", ignore = true)
     Inquilino toEntity(InquilinoCreateRequestDto dto);
 
 
@@ -29,6 +34,7 @@ public interface InquilinoMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "contratos", ignore = true) // nunca se actualiza desde DTO
+    @Mapping(target = "propiedad", ignore = true)
     void updateEntity(@MappingTarget Inquilino entity, InquilinoUpdateRequestDto dto);
 
 

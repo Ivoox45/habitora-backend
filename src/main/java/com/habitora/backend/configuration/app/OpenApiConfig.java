@@ -18,18 +18,18 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI customOpenAPI() {
 
-        // ----------- SECURITY SCHEME PARA COOKIES -----------
-        SecurityScheme cookieAuthScheme = new SecurityScheme()
-                .type(SecurityScheme.Type.APIKEY) // porque Swagger no soporta cookies con bearer
-                .in(SecurityScheme.In.COOKIE)
-                .name("access_token"); // nombre exacto de la cookie
+        // ----------- SECURITY SCHEME PARA BEARER TOKEN en header Authorization -----------
+        SecurityScheme bearerScheme = new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT");
 
         return new OpenAPI()
                 .components(new Components()
-                        .addSecuritySchemes("cookieAuth", cookieAuthScheme)
+                        .addSecuritySchemes("bearerAuth", bearerScheme)
                 )
                 .addSecurityItem(new SecurityRequirement()
-                        .addList("cookieAuth")
+                        .addList("bearerAuth")
                 )
                 .info(new Info()
                         .title("Habitora Backend API")

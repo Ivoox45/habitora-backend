@@ -41,7 +41,18 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         // 1. Leer token de la cookie
-        String token = cookieUtil.getCookieValue(request, "access_token");
+        String token = null;
+
+        // Prefer Authorization header Bearer token
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
+
+        // Fallback to cookie (compatibility)
+        if (token == null) {
+            token = cookieUtil.getCookieValue(request, "access_token");
+        }
 
         if (token == null) {
             filterChain.doFilter(request, response);
@@ -59,12 +70,18 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
         try {
             email = jwtService.extractUserEmail(token);
         } catch (Exception e) {
-            filterChain.doFilter(request, response);
+            // Token malformed/invalid signature
+            // If token came from Authorization header, return 401; if from cookie, remove cookie then 401.
+            cookieUtil.deleteCookie(response, "access_token");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid token");
             return;
         }
 
         if (email == null) {
-            filterChain.doFilter(request, response);
+            cookieUtil.deleteCookie(response, "access_token");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid token");
             return;
         }
 
@@ -79,7 +96,9 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
 
         // 5. Validar token
         if (!jwtService.isTokenValid(token, usuario)) {
-            filterChain.doFilter(request, response);
+            cookieUtil.deleteCookie(response, "access_token");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Expired or invalid token");
             return;
         }
 

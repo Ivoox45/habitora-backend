@@ -31,7 +31,7 @@ public class HabitacionController {
         @PostMapping("/habitaciones/crear-automatico")
         @Operation(summary = "Crear habitaciones automáticas", description = "Genera códigos como 101, 102, 201, 202 según el piso.")
         public List<HabitacionResponseDto> crearAutomatico(
-                        @RequestBody HabitacionCreateRequestDto dto) {
+                        @Valid @RequestBody HabitacionCreateRequestDto dto) {
                 return habitacionService.createAutomatic(dto);
         }
 
