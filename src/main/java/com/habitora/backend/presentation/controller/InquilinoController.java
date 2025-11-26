@@ -22,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Objects;
 import java.util.List;
 
 @RestController
@@ -48,7 +49,7 @@ public class InquilinoController {
                 InquilinoResponseDto response = service.create(propiedadId, request);
 
                 return ResponseEntity.created(
-                                URI.create("/api/propiedades/" + propiedadId + "/inquilinos/" + response.getId()))
+                                Objects.requireNonNull(URI.create("/api/propiedades/" + propiedadId + "/inquilinos/" + response.getId())))
                                 .body(response);
         }
 

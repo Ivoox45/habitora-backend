@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.habitora.backend.exception.UnauthorizedException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -41,6 +42,12 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(HttpServletRequest request, HttpServletResponse response) {
+        // Mitigación CSRF: requerir header custom para el endpoint de refresh
+        String csrfHeader = request.getHeader("X-CSRF-Token");
+        if (csrfHeader == null || csrfHeader.isBlank()) {
+            throw new UnauthorizedException("Missing or empty X-CSRF-Token header");
+        }
+
         String newAccessToken = authService.refresh(request, response);
         return ResponseEntity.ok(new AuthResponse(newAccessToken));
     }

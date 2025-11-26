@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
+import java.util.Objects;
 import java.util.List;
 
 @RestController
@@ -54,7 +55,7 @@ public class ContratoController {
         ContratoDetailResponseDto response = service.create(propiedadId, request);
 
         return ResponseEntity.created(
-                URI.create("/api/propiedades/" + propiedadId + "/contratos/" + response.getId())
+                Objects.requireNonNull(URI.create("/api/propiedades/" + propiedadId + "/contratos/" + response.getId()))
         ).body(response);
     }
 
