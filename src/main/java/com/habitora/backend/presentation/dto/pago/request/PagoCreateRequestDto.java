@@ -20,4 +20,7 @@ public class PagoCreateRequestDto {
 
     @NotNull(message = "El método de pago es obligatorio.")
     private Pago.MetodoPago metodo;
+
+    // Firma digital del inquilino confirmando el pago (base64 opcional)
+    private String firmaBase64;
 }

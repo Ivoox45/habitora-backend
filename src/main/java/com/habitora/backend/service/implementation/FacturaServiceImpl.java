@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
@@ -65,25 +64,27 @@ public class FacturaServiceImpl implements IFacturaService {
 
         LocalDate inicio = contrato.getFechaInicio();
         LocalDate fin = contrato.getFechaFin();
+        
+        LocalDate fechaActual = inicio;
+        boolean esPrimeraFactura = true;
 
-        YearMonth mesActual = YearMonth.from(inicio);
-        YearMonth mesFin = YearMonth.from(fin);
-
-        while (!mesActual.isAfter(mesFin)) {
-
-            LocalDate periodoInicio = mesActual.atDay(1);
-            LocalDate periodoFin = mesActual.atEndOfMonth();
-
-            // Ajustes si el contrato inicia/termina a mitad de mes
-            if (periodoInicio.isBefore(inicio)) {
-                periodoInicio = inicio;
-            }
+        while (!fechaActual.isAfter(fin)) {
+            // Calcular periodo: desde fechaActual hasta 30 días después (o hasta fin de contrato)
+            LocalDate periodoInicio = fechaActual;
+            LocalDate periodoFin = fechaActual.plusDays(29); // 30 días (incluyendo el día inicial)
+            
+            // Si el periodo se pasa de la fecha fin, ajustamos
             if (periodoFin.isAfter(fin)) {
                 periodoFin = fin;
             }
 
-            // Vencimiento: día 5 del mes correspondiente
-            LocalDate fechaVencimiento = mesActual.atDay(5);
+            // Vencimiento: 5 días después del inicio del periodo
+            LocalDate fechaVencimiento = periodoInicio.plusDays(5);
+
+            // La primera factura se crea como PAGADA (el inquilino paga el primer mes al firmar)
+            Factura.EstadoFactura estadoInicial = esPrimeraFactura 
+                ? Factura.EstadoFactura.PAGADA 
+                : Factura.EstadoFactura.ABIERTA;
 
             Factura factura = Factura.builder()
                     .contrato(contrato)
@@ -91,12 +92,14 @@ public class FacturaServiceImpl implements IFacturaService {
                     .periodoFin(periodoFin)
                     .fechaVencimiento(fechaVencimiento)
                     .montoRenta(montoMensual)
-                    .estado(Factura.EstadoFactura.ABIERTA)
+                    .estado(estadoInicial)
                     .build();
 
             facturaRepository.save(factura);
 
-            mesActual = mesActual.plusMonths(1);
+            // Avanzar al siguiente periodo (30 días)
+            fechaActual = periodoFin.plusDays(1);
+            esPrimeraFactura = false;
         }
     }
 

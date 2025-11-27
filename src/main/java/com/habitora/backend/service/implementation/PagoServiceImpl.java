@@ -83,6 +83,21 @@ public class PagoServiceImpl implements IPagoService {
             throw new IllegalArgumentException("El pago debe ser por el monto exacto de la factura.");
         }
 
+        // Procesar firma si existe
+        byte[] firmaBytes = null;
+        if (request.getFirmaBase64() != null && !request.getFirmaBase64().isEmpty()) {
+            try {
+                // Eliminar el prefijo data:image/png;base64, si existe
+                String base64Data = request.getFirmaBase64();
+                if (base64Data.contains(",")) {
+                    base64Data = base64Data.split(",")[1];
+                }
+                firmaBytes = java.util.Base64.getDecoder().decode(base64Data);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Formato de firma inválido.");
+            }
+        }
+
         // Crear pago
         Pago pago = Pago.builder()
                 .contrato(factura.getContrato())
@@ -90,6 +105,8 @@ public class PagoServiceImpl implements IPagoService {
                 .fechaPago(request.getFechaPago())
                 .monto(request.getMonto())
                 .metodo(request.getMetodo())
+                .estado(Pago.EstadoPago.COMPLETADO)
+                .firmaInquilino(firmaBytes)
                 .build();
 
         pagoRepository.save(pago);
