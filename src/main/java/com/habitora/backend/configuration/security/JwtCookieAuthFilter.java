@@ -29,7 +29,6 @@ public class JwtCookieAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        // Ignore preflight OPTIONS requests
         return "OPTIONS".equalsIgnoreCase(request.getMethod());
     }
 
