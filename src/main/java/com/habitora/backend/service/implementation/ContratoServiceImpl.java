@@ -33,6 +33,7 @@ public class ContratoServiceImpl implements IContratoService {
     private final PropiedadRepository propiedadRepository;
     private final HabitacionRepository habitacionRepository;
     private final InquilinoRepository inquilinoRepository;
+    private final FacturaRepository facturaRepository;
     private final IFacturaService facturaService;
     private final IFileStorageService fileStorageService;
     private final ContratoMapper mapper;
@@ -166,6 +167,19 @@ public class ContratoServiceImpl implements IContratoService {
         hab.setEstado(Habitacion.EstadoHabitacion.DISPONIBLE);
         habitacionRepository.save(hab);
 
+        // anular facturas pendientes (ABIERTA o VENCIDA)
+        List<Factura> facturasPendientes = facturaRepository.findByContratoId(contratoId);
+        int facturasAnuladas = 0;
+        for (Factura factura : facturasPendientes) {
+            if (factura.getEstado() == Factura.EstadoFactura.ABIERTA || 
+                factura.getEstado() == Factura.EstadoFactura.VENCIDA) {
+                factura.setEstado(Factura.EstadoFactura.CANCELADA);
+                facturaRepository.save(factura);
+                facturasAnuladas++;
+            }
+        }
+        log.info("Se anularon {} facturas pendientes del contrato ID: {}", facturasAnuladas, contratoId);
+
         return mapper.toDetailDto(contrato);
     }
 
@@ -209,6 +223,7 @@ public class ContratoServiceImpl implements IContratoService {
     @Override
     @Transactional(readOnly = true)
     public byte[] getFirma(Long propiedadId, Long contratoId) {
+        log.info("📝 Solicitando firma para contrato ID: {} de propiedad ID: {}", contratoId, propiedadId);
 
         Propiedad propiedad = propiedadRepository.findById(propiedadId)
                 .orElseThrow(() -> new ResourceNotFoundException("Propiedad no encontrada."));
@@ -222,12 +237,18 @@ public class ContratoServiceImpl implements IContratoService {
         }
 
         if (contrato.getFirmaPath() == null) {
+            log.warn("⚠️ Contrato ID: {} no tiene firma registrada", contratoId);
             throw new BusinessException("Este contrato no tiene firma.");
         }
 
+        log.info("📁 Ruta de firma: {}", contrato.getFirmaPath());
+
         try {
-            return fileStorageService.loadFile(contrato.getFirmaPath());
+            byte[] firmaBytes = fileStorageService.loadFile(contrato.getFirmaPath());
+            log.info("✅ Firma cargada exitosamente. Tamaño: {} bytes", firmaBytes.length);
+            return firmaBytes;
         } catch (IOException e) {
+            log.error("❌ Error al leer el archivo de firma: {}", contrato.getFirmaPath(), e);
             throw new RuntimeException("Error al leer el archivo de firma", e);
         }
     }

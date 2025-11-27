@@ -32,6 +32,7 @@ import java.util.List;
 public class InquilinoController {
 
         private final IInquilinoService service;
+        private final com.habitora.backend.integration.DniLookupService dniLookupService;
 
         // ==========================================================
         // CREATE
@@ -72,6 +73,23 @@ public class InquilinoController {
 
                 return ResponseEntity.ok(
                                 service.findAll(propiedadId, disponibles, query));
+        }
+
+        // ==========================================================
+        // LOOKUP DNI → Nombre (para usar en el formulario antes de crear)
+        // ==========================================================
+        @GetMapping("/lookup")
+        @Operation(summary = "Lookup de nombre por DNI", description = "Consulta a RENIEC para obtener el nombre a partir del DNI.")
+        public ResponseEntity<java.util.Map<String, String>> lookupNombrePorDni(
+                        @RequestParam String dni) {
+
+                // Intentar primero con apis.net.pe (más confiable)
+                String nombre = dniLookupService.getNombrePorDni(dni);
+                
+                return ResponseEntity.ok(java.util.Map.of(
+                                "dni", dni,
+                                "nombreCompleto", nombre != null ? nombre : ""
+                ));
         }
 
         // ==========================================================

@@ -1,6 +1,12 @@
 {
   "properties": [
     {
+      "name": "external.apisnetpe.token",
+      "type": "java.lang.String",
+      "description": "Token de autenticación para apis.net.pe (RENIEC DNI)",
+      "sourceType": "com.habitora.backend.integration.DniLookupService"
+    },
+    {
       "name": "jwt.secret",
       "type": "java.lang.String",
       "description": "JWT secret key"

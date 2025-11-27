@@ -10,9 +10,12 @@ import com.habitora.backend.exception.BusinessException;
 import com.habitora.backend.exception.ResourceNotFoundException;
 import com.habitora.backend.exception.UnauthorizedException;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class ControllerAdvice {
 
@@ -22,7 +25,10 @@ public class ControllerAdvice {
         Map<String, String> errors = new HashMap<>();
 
         ex.getBindingResult().getFieldErrors()
-                .forEach(fieldError -> errors.put(fieldError.getField(), fieldError.getDefaultMessage()));
+                .forEach(fieldError -> {
+                    log.error("Validation error - Field: {}, Message: {}", fieldError.getField(), fieldError.getDefaultMessage());
+                    errors.put(fieldError.getField(), fieldError.getDefaultMessage());
+                });
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

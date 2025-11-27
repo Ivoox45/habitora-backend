@@ -6,6 +6,7 @@ import com.habitora.backend.persistence.repository.RefreshTokenRepository;
 import com.habitora.backend.service.interfaces.IRefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -43,6 +44,7 @@ public class RefreshTokenServiceImpl implements IRefreshTokenService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Usuario validateRefreshToken(String rawToken) {
         String tokenHash = hash(rawToken);
         return refreshTokenRepository.findByTokenHash(tokenHash)
@@ -52,6 +54,7 @@ public class RefreshTokenServiceImpl implements IRefreshTokenService {
     }
 
     @Override
+    @Transactional
     public String validateAndRotate(String rawToken, long expirationSeconds) {
         String tokenHash = hash(rawToken);
 
@@ -62,28 +65,33 @@ public class RefreshTokenServiceImpl implements IRefreshTokenService {
             return null;
         }
 
+        // Cargar el usuario DENTRO de la transacción para evitar LazyInitializationException
         Usuario usuario = existing.getUsuario();
 
-        // delete only the existing token (rotate)
-        refreshTokenRepository.deleteByTokenHash(tokenHash);
+        // Eliminar el token viejo usando el objeto directamente (no el hash)
+        refreshTokenRepository.delete(existing);
+        refreshTokenRepository.flush(); // Forzar el delete antes de crear el nuevo
 
-        // create a new refresh token for the same user
+        // Crear un nuevo refresh token para el mismo usuario
         String newRaw = createRefreshToken(usuario, expirationSeconds);
         return newRaw;
     }
 
     @Override
+    @Transactional
     public void deleteByTokenHash(String tokenHash) {
         refreshTokenRepository.deleteByTokenHash(tokenHash);
     }
 
     @Override
+    @Transactional
     public void deleteByRawToken(String rawToken) {
         String tokenHash = hash(rawToken);
         refreshTokenRepository.deleteByTokenHash(tokenHash);
     }
 
     @Override
+    @Transactional
     public void deleteByUsuario(Usuario usuario) {
         refreshTokenRepository.deleteByUsuario(usuario);
     }

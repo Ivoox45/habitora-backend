@@ -28,6 +28,8 @@ public class ContratoMapper {
         dto.setHabitacionId(hab.getId());
         dto.setHabitacionCodigo(hab.getCodigo());
 
+        dto.setTieneFirma(contrato.getFirmaPath() != null);
+
         return dto;
     }
 

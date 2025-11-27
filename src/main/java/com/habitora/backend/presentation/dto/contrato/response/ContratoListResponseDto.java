@@ -23,4 +23,6 @@ public class ContratoListResponseDto {
 
     private Long habitacionId;
     private String habitacionCodigo;
+
+    private boolean tieneFirma;
 }

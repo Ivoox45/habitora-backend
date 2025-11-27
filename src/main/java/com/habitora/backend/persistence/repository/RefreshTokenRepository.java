@@ -9,7 +9,10 @@ import java.util.Optional;
 
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
-    Optional<RefreshToken> findByTokenHash(String tokenHash);
+    
+    @org.springframework.data.jpa.repository.Query("SELECT rt FROM RefreshToken rt JOIN FETCH rt.usuario WHERE rt.tokenHash = :tokenHash")
+    Optional<RefreshToken> findByTokenHash(@org.springframework.data.repository.query.Param("tokenHash") String tokenHash);
+    
     void deleteByUsuario(Usuario usuario);
     void deleteByTokenHash(String tokenHash);
 

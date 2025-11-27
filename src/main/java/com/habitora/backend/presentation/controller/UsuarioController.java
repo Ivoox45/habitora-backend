@@ -42,6 +42,14 @@ public class UsuarioController {
                                                 tiene));
         }
 
+        @GetMapping("/{usuarioId}")
+        @Operation(summary = "Obtiene un usuario por su ID")
+        public ResponseEntity<com.habitora.backend.presentation.dto.usuario.response.UsuarioResponseDto> getUsuarioById(@PathVariable Long usuarioId) {
+                return usuarioService.findById(usuarioId)
+                        .map(ResponseEntity::ok)
+                        .orElse(ResponseEntity.notFound().build());
+        }
+
         @GetMapping("/{usuarioId}/propiedades-simple")
         @Operation(summary = "Obtiene solo los datos básicos del usuario y sus propiedades")
         public ResponseEntity<UsuarioPropiedadesDto> getSimpleProperties(@PathVariable Long usuarioId) {

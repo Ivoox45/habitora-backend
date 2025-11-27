@@ -24,10 +24,16 @@ public class CookieUtil {
 
         boolean prod = isProd();
 
-        // En producción: cookies cross-site → SameSite=None + Secure=true (HTTPS)
-        // En local: SameSite=Lax + Secure=false (para funcionar en http://localhost)
-        cookie.setSecure(prod);
-        cookie.setAttribute("SameSite", prod ? "None" : "Lax");
+        if (prod) {
+            // Producción: cookies cross-site → SameSite=None + Secure=true (HTTPS)
+            cookie.setSecure(true);
+            cookie.setAttribute("SameSite", "None");
+        } else {
+            // Local: NO establecer SameSite para permitir cookies entre puertos
+            // El navegador usa el valor por defecto (Lax) que funciona en localhost
+            cookie.setSecure(false);
+            // NO establecer SameSite en desarrollo
+        }
 
         cookie.setMaxAge(maxAgeSeconds);
 
@@ -40,8 +46,14 @@ public class CookieUtil {
         cookie.setHttpOnly(true);
 
         boolean prod = isProd();
-        cookie.setSecure(prod);
-        cookie.setAttribute("SameSite", prod ? "None" : "Lax");
+        
+        if (prod) {
+            cookie.setSecure(true);
+            cookie.setAttribute("SameSite", "None");
+        } else {
+            cookie.setSecure(false);
+            // NO establecer SameSite en desarrollo
+        }
 
         cookie.setMaxAge(0);
         response.addCookie(cookie);

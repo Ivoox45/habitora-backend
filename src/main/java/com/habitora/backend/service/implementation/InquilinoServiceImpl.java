@@ -30,6 +30,7 @@ public class InquilinoServiceImpl implements IInquilinoService {
     private final InquilinoRepository inquilinoRepository;
     private final PropiedadRepository propiedadRepository;
     private final InquilinoMapper mapper;
+    private final com.habitora.backend.integration.DniLookupService dniLookupService;
 
     /*
      * =======================================================
@@ -75,6 +76,15 @@ public class InquilinoServiceImpl implements IInquilinoService {
 
         Inquilino entity = mapper.toEntity(request);
         entity.setPropiedad(propiedad);
+
+        // Si no nos envían nombre, intentar obtenerlo por DNI desde el servicio externo
+        if (entity.getNombreCompleto() == null || entity.getNombreCompleto().isBlank()) {
+            // Usar apis.net.pe como principal (ya configurado)
+            String nombre = dniLookupService.getNombrePorDni(request.getNumeroDni());
+            if (nombre != null && !nombre.isBlank()) {
+                entity.setNombreCompleto(nombre);
+            }
+        }
 
         inquilinoRepository.save(entity);
 

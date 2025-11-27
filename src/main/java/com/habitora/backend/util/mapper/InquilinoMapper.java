@@ -24,6 +24,10 @@ public interface InquilinoMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "contratos", ignore = true) // no viene del DTO
     @Mapping(target = "propiedad", ignore = true)
+    @Mapping(target = "numeroDni", expression = "java( dto.getNumeroDni() != null ? dto.getNumeroDni().trim() : null )")
+    @Mapping(target = "nombreCompleto", expression = "java( dto.getNombreCompleto() != null ? dto.getNombreCompleto().trim() : null )")
+    @Mapping(target = "email", expression = "java( dto.getEmail() != null ? dto.getEmail().trim() : null )")
+    @Mapping(target = "telefonoWhatsapp", expression = "java( dto.getTelefonoWhatsapp() != null ? dto.getTelefonoWhatsapp().trim() : null )")
     Inquilino toEntity(InquilinoCreateRequestDto dto);
 
 
@@ -35,6 +39,10 @@ public interface InquilinoMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "contratos", ignore = true) // nunca se actualiza desde DTO
     @Mapping(target = "propiedad", ignore = true)
+    @Mapping(target = "numeroDni", expression = "java( dto.getNumeroDni() != null ? dto.getNumeroDni().trim() : null )")
+    @Mapping(target = "nombreCompleto", expression = "java( dto.getNombreCompleto() != null ? dto.getNombreCompleto().trim() : null )")
+    @Mapping(target = "email", expression = "java( dto.getEmail() != null ? dto.getEmail().trim() : null )")
+    @Mapping(target = "telefonoWhatsapp", expression = "java( dto.getTelefonoWhatsapp() != null ? dto.getTelefonoWhatsapp().trim() : null )")
     void updateEntity(@MappingTarget Inquilino entity, InquilinoUpdateRequestDto dto);
 
 
