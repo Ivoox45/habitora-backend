@@ -1,5 +1,8 @@
 package com.habitora.backend.persistence.entity;
 
+import com.habitora.backend.presentation.validation.OnlyLetters;
+import com.habitora.backend.presentation.validation.PeruvianDni;
+import com.habitora.backend.presentation.validation.PeruvianPhone;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -31,20 +34,23 @@ public class Inquilino {
         private Propiedad propiedad;
 
         @NotBlank
+        @OnlyLetters(message = "El nombre solo puede contener letras, espacios y tildes.")
         @Size(max = 140)
         @Column(nullable = false, length = 140)
         private String nombreCompleto;
 
         @NotBlank
-        @Size(max = 20)
-        @Column(nullable = false, length = 20)
+        @PeruvianDni(message = "El DNI debe tener exactamente 8 dígitos numéricos.")
+        @Size(max = 8)
+        @Column(nullable = false, length = 8)
         private String numeroDni;
 
         @Email
         @Size(max = 160)
         private String email;
 
-        @Size(max = 40)
+        @PeruvianPhone(message = "El teléfono debe tener exactamente 9 dígitos.")
+        @Size(max = 9)
         private String telefonoWhatsapp;
 
         @Builder.Default

@@ -9,7 +9,7 @@ import com.habitora.backend.presentation.dto.usuario.response.UsuarioResponseDto
 import com.habitora.backend.presentation.dto.usuario.response.UsuarioListResponseDto;
 
 @SuppressWarnings("all")
-@org.mapstruct.Mapper(componentModel = "spring")
+@org.mapstruct.Mapper(componentModel = "spring", unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 public interface UsuarioMapper {
 
     @Mapping(target = "id", ignore = true)

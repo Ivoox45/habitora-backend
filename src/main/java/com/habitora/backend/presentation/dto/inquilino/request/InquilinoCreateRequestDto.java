@@ -1,5 +1,8 @@
 package com.habitora.backend.presentation.dto.inquilino.request;
 
+import com.habitora.backend.presentation.validation.OnlyLetters;
+import com.habitora.backend.presentation.validation.PeruvianDni;
+import com.habitora.backend.presentation.validation.PeruvianPhone;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -8,11 +11,13 @@ import lombok.Data;
 @Data
 public class InquilinoCreateRequestDto {
 
+    @OnlyLetters(message = "El nombre solo puede contener letras, espacios y tildes.")
     @Size(max = 140, message = "El nombre completo no puede exceder los 140 caracteres.")
     private String nombreCompleto;
 
     @NotBlank(message = "El DNI es obligatorio.")
-    @Size(max = 20, message = "El DNI no puede exceder los 20 caracteres.")
+    @PeruvianDni(message = "El DNI debe tener exactamente 8 dígitos numéricos.")
+    @Size(max = 8, message = "El DNI debe tener exactamente 8 dígitos.")
     private String numeroDni;
 
     @NotBlank(message = "El correo electrónico es obligatorio.")
@@ -20,6 +25,7 @@ public class InquilinoCreateRequestDto {
     @Size(max = 160, message = "El correo electrónico no puede exceder los 160 caracteres.")
     private String email;
 
-    @Size(max = 40, message = "El número de WhatsApp no puede exceder los 40 caracteres.")
+    @PeruvianPhone(message = "El teléfono debe tener exactamente 9 dígitos (sin código de país).")
+    @Size(max = 9, message = "El teléfono debe tener máximo 9 dígitos.")
     private String telefonoWhatsapp;
 }

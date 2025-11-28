@@ -1,5 +1,7 @@
 package com.habitora.backend.persistence.entity;
 
+import com.habitora.backend.presentation.validation.OnlyLetters;
+import com.habitora.backend.presentation.validation.PeruvianPhone;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -34,6 +36,7 @@ public class Usuario implements UserDetails {
     private Long id;
 
     @NotBlank(message = "El nombre completo es obligatorio.")
+    @OnlyLetters(message = "El nombre solo puede contener letras, espacios y tildes.")
     @Size(max = 120, message = "El nombre completo no puede exceder los 120 caracteres.")
     @Column(name = "nombre_completo", nullable = false, length = 120)
     private String nombreCompleto;
@@ -43,8 +46,9 @@ public class Usuario implements UserDetails {
     @Column(name = "email", nullable = false, unique = true, length = 160)
     private String email;
 
-    @Size(max = 40, message = "El número de WhatsApp no puede exceder los 40 caracteres.")
-    @Column(name = "telefono_whatsapp", length = 40)
+    @PeruvianPhone(message = "El teléfono debe tener exactamente 9 dígitos.")
+    @Size(max = 9, message = "El número de WhatsApp debe tener máximo 9 dígitos.")
+    @Column(name = "telefono_whatsapp", length = 9)
     private String telefonoWhatsapp;
 
     @NotBlank(message = "La contraseña es obligatoria.")
