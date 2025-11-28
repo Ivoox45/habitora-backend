@@ -18,4 +18,6 @@ public interface HabitacionRepository extends JpaRepository<Habitacion, Long> {
      * ordenadas por número de piso (piso.numeroPiso ASC).
      */
     List<Habitacion> findByPropiedadIdOrderByPisoNumeroPisoAsc(Long propiedadId);
+    
+    List<Habitacion> findByPropiedadId(Long propiedadId);
 }

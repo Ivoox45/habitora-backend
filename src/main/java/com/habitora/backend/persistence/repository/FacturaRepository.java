@@ -15,4 +15,16 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
 
     // Facturas de un contrato
     List<Factura> findByContratoId(Long contratoId);
+
+    // Para dashboard - alias para findByContratoPropiedadId
+    default List<Factura> findByContratoPropertyId(Long propiedadId) {
+        return findByContratoPropiedadId(propiedadId);
+    }
+
+    // Para dashboard - facturas con múltiples estados
+    default List<Factura> findByContratoPropertyIdAndEstadoIn(Long propiedadId, List<Factura.EstadoFactura> estados) {
+        return findByContratoPropiedadId(propiedadId).stream()
+                .filter(f -> estados.contains(f.getEstado()))
+                .toList();
+    }
 }

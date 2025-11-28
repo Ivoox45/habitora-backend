@@ -11,4 +11,6 @@ import java.util.List;
 public interface PisoRepository extends JpaRepository<Piso, Long> {
 
     List<Piso> findByPropiedadOrderByNumeroPisoAsc(Propiedad propiedad);
+    
+    List<Piso> findByPropiedadId(Long propiedadId);
 }

@@ -34,6 +34,9 @@ public class Piso {
   @Column(name = "numero_piso", nullable = false)
   private Integer numeroPiso;
 
+  @Column(name = "codigo", length = 50)
+  private String codigo;
+
   @Builder.Default
   @OneToMany(mappedBy = "piso", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Habitacion> habitaciones = new ArrayList<>();

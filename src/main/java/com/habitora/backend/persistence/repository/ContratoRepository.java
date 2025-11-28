@@ -38,4 +38,9 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
               AND c.estado = 'ACTIVO'
             """)
     boolean existsActivoInHabitacion(Long habitacionId);
+
+    // Para Dashboard
+    List<Contrato> findByPropiedadId(Long propiedadId);
+    
+    List<Contrato> findByPropiedadIdAndEstado(Long propiedadId, Contrato.EstadoContrato estado);
 }

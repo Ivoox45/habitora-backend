@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface PagoRepository extends JpaRepository<Pago, Long> {
@@ -17,4 +18,12 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
            WHERE p.factura.id = :facturaId
            """)
     BigDecimal sumarPagosPorFactura(Long facturaId);
+
+    // Para dashboard - pagos de contratos en un rango de fechas
+    List<Pago> findByContratoIdInAndFechaPagoBetweenAndEstado(
+            List<Long> contratoIds,
+            LocalDate fechaInicio,
+            LocalDate fechaFin,
+            Pago.EstadoPago estado
+    );
 }
