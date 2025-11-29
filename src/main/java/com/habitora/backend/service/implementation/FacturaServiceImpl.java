@@ -59,33 +59,51 @@ public class FacturaServiceImpl implements IFacturaService {
         if (contrato.getFechaFin() == null) {
             return;
         }
-
         BigDecimal montoMensual = contrato.getHabitacion().getPrecioRenta();
 
         LocalDate inicio = contrato.getFechaInicio();
         LocalDate fin = contrato.getFechaFin();
-        
-        LocalDate fechaActual = inicio;
-        boolean esPrimeraFactura = true;
 
-        while (!fechaActual.isAfter(fin)) {
-            // Calcular periodo: desde fechaActual hasta 30 días después (o hasta fin de contrato)
-            LocalDate periodoInicio = fechaActual;
-            LocalDate periodoFin = fechaActual.plusDays(29); // 30 días (incluyendo el día inicial)
-            
-            // Si el periodo se pasa de la fecha fin, ajustamos
-            if (periodoFin.isAfter(fin)) {
-                periodoFin = fin;
+        // Si fin <= inicio, una sola factura (caso borde)
+        if (!fin.isAfter(inicio)) {
+            Factura unica = Factura.builder()
+                    .contrato(contrato)
+                    .periodoInicio(inicio)
+                    .periodoFin(fin)
+                    .fechaVencimiento(inicio.plusDays(5))
+                    .montoRenta(montoMensual)
+                    .estado(Factura.EstadoFactura.PAGADA)
+                    .build();
+            facturaRepository.save(unica);
+            return;
+        }
+
+        // Calcular número de meses (sin off-by-one). Ej: 29 Nov -> 29 May = 6 meses.
+        int meses = (fin.getYear() - inicio.getYear()) * 12 + (fin.getMonthValue() - inicio.getMonthValue());
+        if (meses <= 0) {
+            // Duración menor a un mes: una sola factura.
+            Factura unica = Factura.builder()
+                    .contrato(contrato)
+                    .periodoInicio(inicio)
+                    .periodoFin(fin)
+                    .fechaVencimiento(inicio.plusDays(5))
+                    .montoRenta(montoMensual)
+                    .estado(Factura.EstadoFactura.PAGADA)
+                    .build();
+            facturaRepository.save(unica);
+            return;
+        }
+
+        for (int i = 0; i < meses; i++) {
+            LocalDate periodoInicio = inicio.plusMonths(i);
+            LocalDate siguienteInicio = inicio.plusMonths(i + 1);
+            boolean esUltima = i == meses - 1; // última iteración
+            LocalDate periodoFin = esUltima ? fin : siguienteInicio.minusDays(1);
+            if (periodoFin.isBefore(periodoInicio)) {
+                periodoFin = periodoInicio; // seguridad
             }
-
-            // Vencimiento: 5 días después del inicio del periodo
             LocalDate fechaVencimiento = periodoInicio.plusDays(5);
-
-            // La primera factura se crea como PAGADA (el inquilino paga el primer mes al firmar)
-            Factura.EstadoFactura estadoInicial = esPrimeraFactura 
-                ? Factura.EstadoFactura.PAGADA 
-                : Factura.EstadoFactura.ABIERTA;
-
+            Factura.EstadoFactura estadoInicial = (i == 0) ? Factura.EstadoFactura.PAGADA : Factura.EstadoFactura.ABIERTA;
             Factura factura = Factura.builder()
                     .contrato(contrato)
                     .periodoInicio(periodoInicio)
@@ -94,12 +112,7 @@ public class FacturaServiceImpl implements IFacturaService {
                     .montoRenta(montoMensual)
                     .estado(estadoInicial)
                     .build();
-
             facturaRepository.save(factura);
-
-            // Avanzar al siguiente periodo (30 días)
-            fechaActual = periodoFin.plusDays(1);
-            esPrimeraFactura = false;
         }
     }
 
@@ -107,25 +120,19 @@ public class FacturaServiceImpl implements IFacturaService {
 
     private FacturaResponseDto buildDtoConFlags(Factura f) {
         FacturaResponseDto dto = facturaMapper.toResponse(f);
-
         LocalDate hoy = LocalDate.now();
-
         boolean pagada = f.getEstado() == Factura.EstadoFactura.PAGADA;
         boolean vencidaPorEstado = f.getEstado() == Factura.EstadoFactura.VENCIDA;
         boolean vencimientoPasado = f.getFechaVencimiento().isBefore(hoy);
-
         boolean esVencida = vencidaPorEstado || (!pagada && vencimientoPasado);
-
         dto.setEsPagada(pagada);
         dto.setEsVencida(esVencida);
-
         if (esVencida && !pagada) {
             long dias = ChronoUnit.DAYS.between(f.getFechaVencimiento(), hoy);
             dto.setDiasRetraso((int) dias);
         } else {
             dto.setDiasRetraso(0);
         }
-
         return dto;
     }
 
