@@ -57,4 +57,16 @@ public interface InquilinoRepository extends JpaRepository<Inquilino, Long> {
                             ORDER BY i.nombreCompleto ASC
                         """)
         List<Inquilino> findDisponibles(Long propiedadId);
+
+        @Query("""
+                            SELECT i FROM Inquilino i
+                            WHERE i.propiedad.id = :propiedadId
+                              AND EXISTS (
+                                  SELECT 1 FROM Contrato c
+                                  WHERE c.inquilino.id = i.id
+                                    AND c.estado = 'ACTIVO'
+                              )
+                            ORDER BY i.nombreCompleto ASC
+                        """)
+        List<Inquilino> findConContratoActivo(Long propiedadId);
 }

@@ -107,6 +107,11 @@ public class InquilinoServiceImpl implements IInquilinoService {
             return mapper.toListResponse(inquilinoRepository.findDisponibles(propiedadId));
         }
 
+        // FILTRO 1b: disponibles = false (con contrato activo)
+        if (Boolean.FALSE.equals(disponibles)) {
+            return mapper.toListResponse(inquilinoRepository.findConContratoActivo(propiedadId));
+        }
+
         // FILTRO 2: búsqueda por texto
         if (query != null && !query.isBlank()) {
             return mapper.toListResponse(inquilinoRepository.search(propiedadId, query));

@@ -89,8 +89,7 @@ public class ContratoServiceImpl implements IContratoService {
         habitacion.setEstado(Habitacion.EstadoHabitacion.OCUPADA);
         habitacionRepository.save(habitacion);
 
-        // ⚡ Generar facturas mensuales automáticamente
-        facturaService.generarFacturasParaContrato(contrato);
+        // No generar facturas aún. Se generarán cuando el contrato sea firmado.
 
         log.info("Contrato creado exitosamente con ID: {}", contrato.getId());
         return mapper.toDetailDto(contrato);
@@ -211,6 +210,9 @@ public class ContratoServiceImpl implements IContratoService {
         String path = fileStorageService.saveFile(file, "firmas");
         contrato.setFirmaPath(path);
         contratoRepository.save(contrato);
+
+        // Generar facturas SOLO al registrar la firma del contrato
+        facturaService.generarFacturasParaContrato(contrato);
 
         return mapper.toDetailDto(contrato);
     }

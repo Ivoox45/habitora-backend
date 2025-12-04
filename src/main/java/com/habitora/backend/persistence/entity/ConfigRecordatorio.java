@@ -45,6 +45,19 @@ public class ConfigRecordatorio {
     @Column(name = "esta_activo", nullable = false)
     private Boolean estaActivo = true;
 
+    // Hora preferida de envío de recordatorios automáticos
+    @Column(name = "hora_envio")
+    private java.time.LocalTime horaEnvio;
+
+    // Offsets relativos al vencimiento (e.g., -3,-2,-1,0,1,2)
+    @Column(name = "offsets", length = 60)
+    private String offsetsCsv; // almacenado como CSV
+
+    // Plantilla de mensaje por defecto con placeholders
+    @Lob
+    @Column(name = "mensaje_template")
+    private String mensajeTemplate;
+
     public enum Canal {
         WHATSAPP
     }

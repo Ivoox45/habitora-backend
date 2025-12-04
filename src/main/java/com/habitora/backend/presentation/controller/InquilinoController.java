@@ -63,6 +63,7 @@ public class InquilinoController {
 
                         Filtros opcionales:
                         - disponibles = true → Inquilinos sin contrato ACTIVO
+                        - disponibles = false → Inquilinos con contrato ACTIVO
                         - query = texto → Buscar por nombre o DNI (startsWith)
                         """)
         @ApiResponse(responseCode = "200", description = "Lista de inquilinos", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = InquilinoListResponseDto.class))))

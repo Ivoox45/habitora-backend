@@ -60,6 +60,21 @@ public class Recordatorio {
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 20)
     private EstadoRecordatorio estado;
+
+    // Indica si fue generado automáticamente por el sistema o manualmente por el usuario
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo", nullable = false, length = 20)
+    private TipoRecordatorio tipo = TipoRecordatorio.AUTOMATICO;
+
+    // Usuario que creó el recordatorio manual (nullable para automáticos)
+    @Column(name = "creado_por_usuario_id")
+    private Long creadoPorUsuarioId;
+
+    public enum TipoRecordatorio {
+        AUTOMATICO,
+        MANUAL
+    }
     
     public enum Canal {
         WHATSAPP

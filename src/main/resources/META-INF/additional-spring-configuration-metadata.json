@@ -25,6 +25,36 @@
       "name": "app.env",
       "type": "java.lang.String",
       "description": "Application environment (local | prod)"
+    },
+    {
+      "name": "whatsapp.phone-number-id",
+      "type": "java.lang.String",
+      "description": "WhatsApp Business API Phone Number ID",
+      "sourceType": "com.habitora.backend.integration.whatsapp.WhatsAppService"
+    },
+    {
+      "name": "whatsapp.waba-id",
+      "type": "java.lang.String",
+      "description": "WhatsApp Business Account ID",
+      "sourceType": "com.habitora.backend.integration.whatsapp.WhatsAppService"
+    },
+    {
+      "name": "whatsapp.access-token",
+      "type": "java.lang.String",
+      "description": "WhatsApp Business API Access Token (Meta)",
+      "sourceType": "com.habitora.backend.integration.whatsapp.WhatsAppService"
+    },
+    {
+      "name": "whatsapp.api-version",
+      "type": "java.lang.String",
+      "description": "WhatsApp Business API version (e.g. v19.0)",
+      "sourceType": "com.habitora.backend.integration.whatsapp.WhatsAppService"
+    },
+    {
+      "name": "whatsapp.api-base-url",
+      "type": "java.lang.String",
+      "description": "WhatsApp Business API base URL (https://graph.facebook.com)",
+      "sourceType": "com.habitora.backend.integration.whatsapp.WhatsAppService"
     }
   ]
 }

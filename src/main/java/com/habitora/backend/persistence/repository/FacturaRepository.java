@@ -2,6 +2,7 @@ package com.habitora.backend.persistence.repository;
 
 import com.habitora.backend.persistence.entity.Factura;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -27,4 +28,16 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
                 .filter(f -> estados.contains(f.getEstado()))
                 .toList();
     }
+
+    /**
+     * Busca todas las facturas ABIERTAS (no pagadas, no canceladas)
+     * junto con sus relaciones necesarias para enviar recordatorios.
+     */
+    @Query("SELECT DISTINCT f FROM Factura f " +
+           "JOIN FETCH f.contrato c " +
+           "JOIN FETCH c.inquilino i " +
+           "JOIN FETCH c.habitacion h " +
+           "WHERE f.estado = 'ABIERTA' " +
+           "ORDER BY f.fechaVencimiento ASC")
+    List<Factura> findFacturasAbiertasConDatos();
 }
