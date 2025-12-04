@@ -9,6 +9,7 @@ import com.habitora.backend.presentation.dto.recordatorio.EstadisticasRecordator
 import com.habitora.backend.presentation.dto.recordatorio.RecordatorioDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -25,14 +27,24 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class RecordatorioService {
 
     private final RecordatorioRepository recordatorioRepository;
     private final WhatsAppService whatsAppService;
-        private final FacturaRepository facturaRepository;
-                private final com.habitora.backend.persistence.repository.ConfigRecordatorioRepository configRecordatorioRepository;
+    private final FacturaRepository facturaRepository;
+    private final com.habitora.backend.persistence.repository.ConfigRecordatorioRepository configRecordatorioRepository;
+
+    public RecordatorioService(
+            RecordatorioRepository recordatorioRepository,
+            @Autowired(required = false) WhatsAppService whatsAppService,
+            FacturaRepository facturaRepository,
+            com.habitora.backend.persistence.repository.ConfigRecordatorioRepository configRecordatorioRepository) {
+        this.recordatorioRepository = recordatorioRepository;
+        this.whatsAppService = whatsAppService;
+        this.facturaRepository = facturaRepository;
+        this.configRecordatorioRepository = configRecordatorioRepository;
+    }
 
     /**
      * Crea un recordatorio para una factura si corresponde según los días restantes
@@ -128,7 +140,9 @@ public class RecordatorioService {
         }
 
         // Formatear teléfono a formato internacional
-        String telefonoInternacional = whatsAppService.formatearNumeroPeruano(telefonoLocal);
+        String telefonoInternacional = (whatsAppService != null) 
+            ? whatsAppService.formatearNumeroPeruano(telefonoLocal)
+            : "+51" + telefonoLocal;
 
         // Crear y guardar el recordatorio
         Recordatorio recordatorio = Recordatorio.builder()
@@ -168,6 +182,13 @@ public class RecordatorioService {
     public void enviarRecordatorio(Recordatorio recordatorio) {
         try {
             log.info("Enviando recordatorio {} a {}", recordatorio.getId(), recordatorio.getTelefonoDestino());
+
+            if (whatsAppService == null) {
+                log.warn("WhatsApp no está configurado. Marcando recordatorio como fallido.");
+                recordatorio.setEstado(Recordatorio.EstadoRecordatorio.FALLIDO);
+                recordatorioRepository.save(recordatorio);
+                return;
+            }
 
             String messageId = whatsAppService.enviarMensaje(
                     recordatorio.getTelefonoDestino(),
@@ -251,12 +272,17 @@ public class RecordatorioService {
 
                                 String mensaje = construirMensajeManual(factura, mensajePersonalizado, offset);
 
+                                String telefono = factura.getContrato().getInquilino().getTelefonoWhatsapp();
+                                String telefonoFormateado = (whatsAppService != null)
+                                    ? whatsAppService.formatearNumeroPeruano(telefono)
+                                    : "+51" + telefono;
+
                                 Recordatorio nuevo = Recordatorio.builder()
                                                 .factura(factura)
                                                 .contrato(factura.getContrato())
                                                 .programadoPara(programadoPara)
                                                 .canal(Recordatorio.Canal.WHATSAPP)
-                                                .telefonoDestino(whatsAppService.formatearNumeroPeruano(factura.getContrato().getInquilino().getTelefonoWhatsapp()))
+                                                .telefonoDestino(telefonoFormateado)
                                                 .mensaje(mensaje)
                                                 .estado(Recordatorio.EstadoRecordatorio.PROGRAMADO)
                                                 .tipo(Recordatorio.TipoRecordatorio.MANUAL)

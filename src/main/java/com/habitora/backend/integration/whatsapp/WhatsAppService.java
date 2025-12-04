@@ -3,6 +3,7 @@ package com.habitora.backend.integration.whatsapp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -13,10 +14,12 @@ import java.util.Map;
 /**
  * Servicio de integración con WhatsApp Business API (Meta/Facebook).
  * Permite enviar mensajes de texto a través de la API de WhatsApp Cloud.
+ * Solo se activa si whatsapp.enabled=true
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "whatsapp.enabled", havingValue = "true", matchIfMissing = false)
 public class WhatsAppService {
 
     @Value("${whatsapp.phone-number-id}")
